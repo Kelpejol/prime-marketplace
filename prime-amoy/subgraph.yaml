@@ -1,0 +1,119 @@
+specVersion: 1.0.0
+indexerHints:
+  prune: auto
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: TWProxy
+    network: polygon-amoy
+    source:
+      address: "0xa87dC5f619b2DD0Ba5C141Cf3BC755A401A49DFC"
+      abi: TWProxy
+      startBlock: 17209730
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - BuyerApprovedForListing
+        - BuyerRemovedForListing
+        - CancelledListing
+        - CurrencyApprovedForListing
+        - ListingPlanUpdated
+        - ListingUpdated
+        - NewListingCreated
+        - NewSale
+        - AcceptedOffer
+        - CancelledOffer
+        - NewOffer
+        - RejectedOffer
+        - AuctionClosed
+        - AuctionPaidOut
+        - AuctionTokenPaidOut
+        - AuctionUpdated
+        - CancelledAuction
+        - NewAuction
+        - NewBid
+        - CurrencyRemoved
+        - CurrencySet
+        - ExtensionAdded
+        - ExtensionRemoved
+        - ExtensionReplaced
+        - FunctionDisabled
+        - FunctionEnabled
+        - Initialized
+        - ListingPlanSet
+        - RoleAdminChanged
+        - RoleGranted
+        - RoleRevoked
+        - RoyaltyEngineUpdated
+      abis:
+        - name: TWProxy
+          file: ./abis/TWProxy.json
+      eventHandlers:
+        - event: BuyerApprovedForListing(indexed uint256,indexed address)
+          handler: handleBuyerApprovedForListing
+        - event: BuyerRemovedForListing(indexed uint256)
+          handler: handleBuyerRemovedForListing
+        - event: CancelledListing(indexed address,indexed uint256)
+          handler: handleCancelledListing
+        - event: CurrencyApprovedForListing(indexed uint256,indexed address,uint256)
+          handler: handleCurrencyApprovedForListing
+        - event: ListingPlanUpdated(indexed uint128)
+          handler: handleListingPlanUpdated
+        - event: ListingUpdated(indexed address,indexed uint256)
+          handler: handleListingUpdated
+        - event: NewListingCreated(indexed address,indexed uint256,indexed address,(uint256,uint256,uint256,uint128,uint128,address,address,address,uint8,uint8,uint8,bool))
+          handler: handleNewListingCreated
+        - event: NewSale(indexed address,indexed uint256,indexed address,uint256,address,uint256)
+          handler: handleNewSale
+        - event: AcceptedOffer(indexed address,indexed uint256,indexed uint256,uint256)
+          handler: handleAcceptedOffer
+        - event: CancelledOffer(indexed address,indexed uint256,indexed uint256)
+          handler: handleCancelledOffer
+        - event: NewOffer(indexed uint256,indexed uint256,indexed uint256,address,uint256)
+          handler: handleNewOffer
+        - event: RejectedOffer(indexed address,indexed uint256,indexed uint256)
+          handler: handleRejectedOffer
+        - event: AuctionClosed(indexed uint256,indexed address,indexed uint256)
+          handler: handleAuctionClosed
+        - event: AuctionPaidOut(indexed address,indexed uint256,indexed uint256)
+          handler: handleAuctionPaidOut
+        - event: AuctionTokenPaidOut(indexed address,indexed uint256)
+          handler: handleAuctionTokenPaidOut
+        - event: AuctionUpdated(indexed uint256)
+          handler: handleAuctionUpdated
+        - event: CancelledAuction(indexed address,indexed uint256)
+          handler: handleCancelledAuction
+        - event: NewAuction(indexed address,indexed uint256,indexed address)
+          handler: handleNewAuction
+        - event: NewBid(indexed uint256,indexed address,indexed uint256)
+          handler: handleNewBid
+        - event: CurrencyRemoved(indexed address)
+          handler: handleCurrencyRemoved
+        - event: CurrencySet(indexed address,indexed address)
+          handler: handleCurrencySet
+        - event: ExtensionAdded(indexed string,indexed address,((string,string,address),(bytes4,string)[]))
+          handler: handleExtensionAdded
+        - event: ExtensionRemoved(indexed string,((string,string,address),(bytes4,string)[]))
+          handler: handleExtensionRemoved
+        - event: ExtensionReplaced(indexed string,indexed address,((string,string,address),(bytes4,string)[]))
+          handler: handleExtensionReplaced
+        - event: FunctionDisabled(indexed string,indexed bytes4,(string,string,address))
+          handler: handleFunctionDisabled
+        - event: FunctionEnabled(indexed string,indexed bytes4,(bytes4,string),(string,string,address))
+          handler: handleFunctionEnabled
+        - event: Initialized(uint8)
+          handler: handleInitialized
+        - event: ListingPlanSet(indexed uint128,indexed uint256)
+          handler: handleListingPlanSet
+        - event: RoleAdminChanged(indexed bytes32,indexed bytes32,indexed bytes32)
+          handler: handleRoleAdminChanged
+        - event: RoleGranted(indexed bytes32,indexed address,indexed address)
+          handler: handleRoleGranted
+        - event: RoleRevoked(indexed bytes32,indexed address,indexed address)
+          handler: handleRoleRevoked
+        - event: RoyaltyEngineUpdated(indexed address,indexed address)
+          handler: handleRoyaltyEngineUpdated
+      file: ./src/tw-proxy.ts

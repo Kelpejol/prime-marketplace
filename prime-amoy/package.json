@@ -1,0 +1,22 @@
+{
+  "name": "prime-amoy",
+  "license": "UNLICENSED",
+  "scripts": {
+    "codegen": "graph codegen",
+    "build": "graph build",
+    "deploy": "graph deploy --node https://api.studio.thegraph.com/deploy/ prime-amoy",
+    "create-local": "graph create --node http://localhost:8020/ prime-amoy",
+    "remove-local": "graph remove --node http://localhost:8020/ prime-amoy",
+    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 prime-amoy",
+    "test": "graph test"
+  },
+  "dependencies": {
+    "@graphprotocol/graph-cli": "0.94.0",
+    "@graphprotocol/graph-ts": "0.36.0",
+    "undici": "^7.3.0"
+  },
+  "devDependencies": {
+    "matchstick-as": "0.6.0"
+  },
+  "packageManager": "yarn@4.6.0+sha512.5383cc12567a95f1d668fbe762dfe0075c595b4bfff433be478dbbe24e05251a8e8c3eb992a986667c1d53b6c3a9c85b8398c35a960587fbd9fa3a0915406728"
+}

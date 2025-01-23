@@ -1,0 +1,16 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+remappings = [
+ "thirdweb-dynamic=lib/dynamic-contracts",
+ "thirdweb-contract=lib/contracts/contracts", 
+ "openzeppelin-contract=lib/openzeppelin-contracts/contracts",
+ "chainlink-contract=lib/contracts/lib/chainlink"
+ ]
+
+ 
+
+
+ 
+# See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
