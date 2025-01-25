@@ -12,7 +12,7 @@ interface ListingsState {
 // Interface for the store actions
 interface ListingsActions {
   setMutate: (mutateFn: MutateFn) => void;
-  refreshListings: () => void;
+  refreshListings: () => Promise<void>;
 }
 
 // Combined interface for the entire store
@@ -34,7 +34,7 @@ const useListingsStore = create<ListingsStore>((set) => ({
     });
   },
 
-  refreshListings: () => {
+  refreshListings: async () => {
     set((state) => {
       state.mutate?.();
       return state;

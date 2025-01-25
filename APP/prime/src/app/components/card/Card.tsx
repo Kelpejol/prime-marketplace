@@ -15,10 +15,11 @@ import useBuyModal from '@/app/hooks/useBuyModal';
   price: string,
   listingId: bigint,
   symbol: string,
-  status: number
+  status: number,
+  showButton?: boolean
  }
 
-const Card = ({src, name, tokenId, price, listingId, symbol, status}: CardProps) => {
+const Card = ({src, name, tokenId, price, listingId, symbol, status, showButton}: CardProps) => {
   const [rotation, setRotation] = useState(132);
     const dialog = useDialog();
     const router = useRouter();
@@ -96,13 +97,16 @@ const Card = ({src, name, tokenId, price, listingId, symbol, status}: CardProps)
         <div className="relative h-full overflow-hidden rounded-sm md:rounded-md bg-[#191c29] cursor-pointer">
           <div className="relative w-full h-full">
             <div className="absolute inset-0 hover:bg-[rgba(0,0,0,0.78)] z-10 transition-colors duration-1000" />
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-[15]">
-              <div className="flex-col space-y-6">
-                <Button actionLabel='Buy listing' size='small' color='magic' action={buyListing} />
-                <Button actionLabel='Make Offer' size='small' color='magic' action={makeOffer}
-                />
+            {showButton && (
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-[15]">
+                <div className="flex-col space-y-6">
+                  <Button actionLabel='Buy listing' size='small' color='magic' action={buyListing} />
+                  <Button actionLabel='Make Offer' size='small' color='magic' action={makeOffer}
+                  />
+                </div>
               </div>
-            </div>             
+            )}
+          
 
             <div className="relative w-full h-[85%]">
               <Image

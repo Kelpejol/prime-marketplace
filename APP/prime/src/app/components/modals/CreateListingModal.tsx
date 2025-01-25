@@ -8,7 +8,7 @@ import Heading from "../Heading";
 import ToggleSwitch from "../ToggleSwitch";
 import { useActiveAccount } from "thirdweb/react";
 import CurrencySelect, { CurrencySelectValue } from "../CurrencySelect";
-import { createListing } from "@/app/contracts/directListing";
+import { createListing } from "@/app/contracts/listing";
 import toast from "react-hot-toast";
 import { showToast } from "../WalletToast";
 import {getListingType} from "../../contracts/getPlatformInfo"
@@ -71,7 +71,7 @@ const {
 
 
 
-    const onSubmit: SubmitHandler<FieldValues> = (data) => {
+    const onSubmit: SubmitHandler<FieldValues> = async (data) => {
  
   if (step !== STEPS.INFO) {
     return onNext();
@@ -92,7 +92,8 @@ const {
         return;
       }
     setIsLoading(true);
-   createListing( listingData, account).then((data) => {
+    try{
+  await createListing( listingData, account).then(async (data: any) => {
     if (data.success) {
           createListingModal.onClose();
       toast.success(data.message);
@@ -101,12 +102,18 @@ const {
         setChecked(false);
         setSelectedValue(undefined);
         setStep(STEPS.TYPE);
-        listingsStore.refreshListings()
+        await listingsStore.refreshListings()
  } else {
       toast.error(data.message);
     }
+  })} catch (error: any) {
+    toast.error(error.message);
+    console.error(error)
+  }
+  finally{
     setIsLoading(false);
-   })
+  }
+   
   } else {
     createListingModal.onClose();
   showToast()

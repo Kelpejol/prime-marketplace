@@ -14,7 +14,7 @@ import  { showToast } from "../WalletToast";
 import toast from "react-hot-toast";
 import useCreateListingModal from "@/app/hooks/useCreateListingModal";
  
-
+ 
 enum STEPS {
   TYPE = 0,
   IMAGE = 1,
@@ -63,7 +63,7 @@ const {
     reValidateMode: 'onSubmit'
   })
 
-    const onSubmit: SubmitHandler<FieldValues> = (data) => {
+    const onSubmit: SubmitHandler<FieldValues> = async (data) => {
   if (step !== STEPS.INFO) {
     return onNext();
   }
@@ -71,8 +71,9 @@ const {
 
   if (account) {
   setIsLoading(true);
-   createNFT( account , data).then((data) => {
-    if(data.success) {
+   try{
+   await createNFT(account, data).then((data) => {
+     if(data.success) {
    nftModal.onClose();
    toast.success(data.message)
     reset();
@@ -88,10 +89,18 @@ const {
   else {
     toast.error(data.message);
   }
-  setIsLoading(false);
-  
-
    })
+
+
+   
+} catch(error){
+  toast.error("Unexpected error occured, Try again");
+  console.error(error);
+} finally {
+  setIsLoading(false);
+}
+
+   
    
   }
   else {

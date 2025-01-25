@@ -1,23 +1,27 @@
+
+
 import { useEffect, useCallback, useState } from 'react';
 import useSWRInfinite, { SWRInfiniteKeyLoader } from 'swr/infinite';
 import { useInView } from 'react-intersection-observer';
-import { listings } from '../contracts/getPlatformInfo';
 
 interface InfiniteScrollOptions<T> {
   fetchData: (key: string) => Promise<{ items: T[]; totalCount: number }>;
-  initialTotalCount: number | null;
+  initialTotalCount?: number | null;
   revalidateKey: string;
+  getTotalCount?: () => Promise<number>;
 }
 
 export function useInfiniteScroll<T>({
   fetchData,
-  initialTotalCount,
+  initialTotalCount = null,
   revalidateKey,
+  getTotalCount
 }: InfiniteScrollOptions<T>) {
   const { ref, inView } = useInView({
-    threshold: 0.1, // Trigger when 10% of the element is visible
-    rootMargin: '100px' // Start loading 100px before the element is visible
+    threshold: 0.1,
+    rootMargin: '100px'
   });
+  
   const [totalCount, setTotalCount] = useState<number | null>(initialTotalCount);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -26,15 +30,28 @@ export function useInfiniteScroll<T>({
     return () => setIsMounted(false);
   }, []);
 
+  // Initialize total count if getTotalCount is provided
+  useEffect(() => {
+    const initializeTotalCount = async () => {
+      if (getTotalCount && totalCount === null) {
+        try {
+          const count = await getTotalCount();
+          setTotalCount(count);
+        } catch (error) {
+          console.error('Error fetching total count:', error);
+        }
+      }
+    };
+
+    initializeTotalCount();
+  }, [getTotalCount, totalCount]);
+
   const getKey: SWRInfiniteKeyLoader = useCallback(
     (pageIndex, previousPageData) => {
-      // Don't fetch if not mounted or no total count yet
       if (!isMounted || totalCount === null) return null;
       
-      // Reached the end
       if (previousPageData && !previousPageData.items.length) return null;
       
-      // Generate key with page index
       return `${revalidateKey}-page-${pageIndex}`;
     },
     [isMounted, totalCount, revalidateKey]
@@ -51,20 +68,20 @@ export function useInfiniteScroll<T>({
     revalidateFirstPage: false,
     revalidateOnFocus: false,
     revalidateOnReconnect: true,
-    persistSize: false, // Changed to false to prevent caching issues
+    persistSize: false,
   });
 
-  const handleMutation = useCallback(async() => {
-    try{
-      const newTotalListings = await listings()
-      if(newTotalListings){
-        setTotalCount(newTotalListings.length) 
+  const handleMutation = useCallback(async () => {
+    try {
+      if (getTotalCount) {
+        const newTotalCount = await getTotalCount();
+        setTotalCount(newTotalCount);
       }
       return originalMutate();
-    } catch(error) {
-      console.error('Error updating after mutation', error)
+    } catch (error) {
+      console.error('Error updating after mutation', error);
     }
-  }, [originalMutate])
+  }, [originalMutate, getTotalCount]);
 
   useEffect(() => {
     if (isMounted && inView && !isLoading && totalCount !== null) {

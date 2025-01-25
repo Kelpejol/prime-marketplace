@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import useSWR from 'swr';
-import {NATIVE_TOKEN} from "../contracts/constant"
-import { getApprovedCurrency } from '../contracts/getPlatformInfo';
+import { NATIVE_TOKEN } from '../constant'; 
+import { getApprovedCurrency } from '../contracts/getPlatformInfo'; 
 
 
 

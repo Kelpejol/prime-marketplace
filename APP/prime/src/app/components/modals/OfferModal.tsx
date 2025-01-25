@@ -9,7 +9,7 @@ import toast from "react-hot-toast";
 import { showToast } from "../WalletToast";
 import useOfferModal from "@/app/hooks/useOfferModal";
 import SwitchablePicker, { PickerType } from "../SwitchablePicker";
-import { makeOffer } from "@/app/contracts/offers";
+import { makeOffer } from "@/app/contracts/offers"; 
 import { formattedTimeStamp } from "@/app/utils/timeHelper";
 
 

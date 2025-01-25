@@ -1,13 +1,11 @@
-'use client'
-import { ContractOptions, sendTransaction } from "thirdweb";
+import { ContractOptions, sendAndConfirmTransaction } from "thirdweb";
 import { deployERC1155Contract, deployERC721Contract } from "thirdweb/deploys";
-import { client } from "../client";
+import { client } from "@/app/client"; 
 import {Account} from "thirdweb/wallets"
 import {FieldValues} from "react-hook-form";
-import { NFT_TYPE } from "../components/modals/CreateNftModal";
+import { NFT_TYPE } from "@/app/components/modals/CreateNftModal"; 
 import { nftContract } from "./getContract";
-import { anvil, polygonAmoy } from "thirdweb/chains";
-import { chain } from "./constant";
+import { chain } from "@/app/constant";
 
 
 
@@ -19,7 +17,7 @@ import { chain } from "./constant";
 
 async function deploySingleNFT(account: Account, params: FieldValues) {
     const contractAddress = await deployERC721Contract({
- chain: polygonAmoy,
+ chain,
  client,
  account,
  type: "TokenERC721",
@@ -36,7 +34,7 @@ return contractAddress;
 
 async function deployMultipleNFT(account: Account, params: FieldValues) {
     const contractAddress = await deployERC1155Contract({
- chain: polygonAmoy,
+ chain,
  client,
  account,
  type: "TokenERC1155",
@@ -66,7 +64,8 @@ async function mintNFT(contract:Readonly<ContractOptions<any>>, to: string, para
 })
   
 
-await sendTransaction({ transaction, account });   
+   const transactionReceipt = await sendAndConfirmTransaction({ transaction, account });  
+   return  transactionReceipt; 
 } else if(params.nftType === NFT_TYPE.MULTIPLE) {
   const transaction = (await import("thirdweb/extensions/erc1155")).mintTo({
 	contract,
@@ -80,7 +79,8 @@ await sendTransaction({ transaction, account });
     },
 })
 console.log(params.amountToMint)
-await sendTransaction({ transaction, account });   
+  const transactionReceipt = await sendAndConfirmTransaction({ transaction, account });  
+  return  transactionReceipt;
    }
   }
 
@@ -99,21 +99,24 @@ export default async function createNFT(account: Account, params: FieldValues) {
        console.log(contractAddress);
 
     const contract = nftContract(contractAddress!);
-    await mintNFT(contract, account.address, params, account);
-    
+   const data =  await mintNFT(contract, account.address, params, account);
+  
+  if(data?.status ==="success"){
     return {
       success: true,
       message: 'NFT created successfully',
       contractAddress
     };
-  } catch (error) {
-    console.log(error);
-    
+  }  else{
     return {
       success: false,
-      message: "NFT creation failed: Try again",
+      message: 'NFT creation failed',
     };
   }
+  } catch (error) {
+    throw error;
+    
+}
 }
 
 

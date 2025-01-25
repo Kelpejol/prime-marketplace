@@ -1,7 +1,6 @@
 import { getContract } from "thirdweb";
-import { anvil } from "thirdweb/chains";
-import { chain, contractAddress } from "./constant";
-import { client } from "../client";
+import { chain, contractAddress } from "@/app/constant";
+import { client } from "@/app/client";
 
 
 export const nftContract = (contractAddress: string) => {

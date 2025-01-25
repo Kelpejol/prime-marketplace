@@ -9,7 +9,7 @@ import Heading from "../Heading";
 
 import useBuyModal from "@/app/hooks/useBuyModal";
 import { useActiveAccount } from "thirdweb/react";
-import { buyFromListing } from "@/app/contracts/directListing";
+import { buyFromListing } from "@/app/contracts/listing";
 import toast from "react-hot-toast";
 import { showToast } from "../WalletToast";
 
@@ -34,21 +34,29 @@ export default function BuyModal() {
     },
   });
 
-  const onSubmit = (data: FieldValues) => {
+  const onSubmit = async (data: FieldValues) => {
     if(account) {
       setIsDisabled(true);
-      buyFromListing(data.recipientAddress, buyModal.listingId!, account!).then((data)=> {
+      try{
+      await buyFromListing(data.recipientAddress, buyModal.listingId!, account!).then(async (data: any)=> {
         if(data.success){
           toast.success(data.message!);
           buyModal.onClose();
           reset();
-           buyModal.mutateListing();
+          await buyModal.mutateListing();
         } else {
           toast.error(data.message!)
         }
-         setIsDisabled(false);
+      })}
 
-      })
+      catch (error) {
+        toast.error("Unexpected error occurred, Try again");
+        console.error(error)
+      } finally {
+        setIsDisabled(false);
+      }
+
+      
 
     } else {
       buyModal.onClose();

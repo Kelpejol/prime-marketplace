@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { fetchNFT, LimitedListings, listings } from "../contracts/getPlatformInfo";
-import { getContract, toEther } from "thirdweb";
-import { client } from "../client";
+import { fetchNFT, LimitedListings, listings } from "@/app/contracts/getPlatformInfo";
+import {  toEther } from "thirdweb";
 import Card from "../components/card/Card";
 import Container from '../components/Container';
 import CardContainer from '../components/card/CardContainer';
@@ -13,19 +12,12 @@ import EmptyState from '../components/EmptyState';
 import Error from '../components/Error';
 import SkeletonCardContainer from "../components/card/CardSkeleton";
 import { fetchTokenInfo } from '@/app/hooks/useCurrencyInfo';
-import { anvil } from 'thirdweb/chains';
 import useListingsStore from "@/app/hooks/useListingsStore"
 import { ipfsToHttp } from '../utils/IpfsToHttp';
-import { chain } from '../contracts/constant';
+import { nftContract } from '../contracts/getContract';
 
 
-export function getContractAddress(address: string) {
-  return getContract({
-    address,
-    chain,
-    client,
-  });
-}
+
 
 export default function Listings() {
   const createListing = useCreateListingModal();
@@ -46,13 +38,13 @@ export default function Listings() {
         return { items: [], totalCount: 0 };
       }
 
-      const nftCards = await Promise.all(pageListings.map(async (listing) => {
+      const nftCards =  await Promise.all(pageListings.map(async (listing) => {
           try {
-            const contract = getContractAddress(listing.assetContract);
-            const [nftDetails, currency] = await Promise.all([
-              fetchNFT(contract, listing),
-              fetchTokenInfo(listing.currency),
-            ]);
+            const contract = nftContract(listing.assetContract);
+            
+              const nftDetails = await fetchNFT(contract, listing);
+              const currency = await fetchTokenInfo(listing.currency);
+            
  
             if (!nftDetails?.metadata) {
               console.error(`Missing metadata for listing ${listing.listingId}`);
@@ -70,6 +62,7 @@ export default function Listings() {
                 listingId={listing.listingId}
                 symbol={currency?.symbol || ''}
                 status={listing.status}
+                showButton
               />
             );
           } catch (error) {
@@ -77,8 +70,8 @@ export default function Listings() {
             return null;
           }
         })
-  )
-
+  
+      )
       const validCards = nftCards.filter(Boolean);
       return {
         items: validCards,
@@ -88,33 +81,30 @@ export default function Listings() {
       console.error('Error fetching listings page:', error);
       throw error;
     }
+  }, []); 
+
+  const totalListing = useCallback(async() => {
+    try {
+      const totalListing = await listings(); // New method needed
+      return totalListing.length;
+    } catch (error) {
+      console.error('Error fetching initial total count:', error);
+      return 0;
+    }
   }, []);
-
-  const { ref, pages, isLoading, error, setTotalCount, mutate } = useInfiniteScroll({
-    fetchData: fetchListingsPage,
-    initialTotalCount: null,
-    revalidateKey: 'listings',
-  });
-
-  // useEffect(() => {
-    
-  // }, []); 
 
   
 
+   const { ref, pages, isLoading, error, mutate } = useInfiniteScroll({
+    fetchData: fetchListingsPage,
+    revalidateKey: 'listings',
+    getTotalCount: totalListing, // Pass the function to get total count
+    initialTotalCount: null,
+  });
+
   useEffect(() => {
-    const initializeTotalCount = async () => {
-      try {
-        const totalListing = await listings(); // New method needed
-        setTotalCount(totalListing.length); 
-      } catch (error) {
-        console.error('Error fetching initial total count:', error);
-      } finally {
-        setInitialLoading(false);
-      } 
-    };
     setMutate(mutate);
-    initializeTotalCount();
+    setInitialLoading(false);
   }, [mutate]);
 
   const allListings = pages?.flatMap((page) => page?.items || []);

@@ -1,7 +1,7 @@
 "use client";
 
 import Modal from "./Modal";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import useCreateAuctionModal from "@/app/hooks/useCreateAuctionModal";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import ToggleSwitch from "../ToggleSwitch";

@@ -1,8 +1,8 @@
 import { prepareContractCall, sendTransaction } from "thirdweb";
 import { Account } from "thirdweb/wallets";
 import { contract } from "./getContract";
-import { NATIVE_TOKEN } from "./constant";
-import { getListing } from "./directListing";
+import { NATIVE_TOKEN } from "@/app/constant";
+import { getListing } from "./listing";
 
 
 export const makeOffer = async (listingId: bigint, account: Account, duration : bigint, totalPrice: bigint) => {

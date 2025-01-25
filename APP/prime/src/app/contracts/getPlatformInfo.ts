@@ -1,7 +1,6 @@
-
 import { ContractOptions, readContract } from "thirdweb";
 import { contract } from "./getContract";
-import { ListingType } from "./directListing";
+import { ListingType } from "./listing";
 
 export const fetchListingPlanFee = async (
   price: bigint, 

@@ -3,7 +3,7 @@
 import {  useEffect, useState } from 'react';
 import useBuyModal from "@/app/hooks/useBuyModal";
 import { useActiveAccount } from "thirdweb/react";
-import { buyFromListing } from "@/app/contracts/directListing";
+import { buyFromListing } from "@/app/contracts/listing";
 import toast from "react-hot-toast";
 import { showToast } from "../WalletToast";
 import useDialog from '@/app/hooks/useDialog';

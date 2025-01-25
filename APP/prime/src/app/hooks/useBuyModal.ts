@@ -6,8 +6,8 @@ interface BuyModalStore {
   onClose: () => void;
   listingId: bigint | null;
   setListingId: (id: bigint) => void;
-  mutateListing: () => void;
-  setMutateListings: (fn: () => void) => void
+  mutateListing: () => Promise<void>;
+  setMutateListings: (fn: () => Promise<void>) => void
 
 }
 
@@ -17,7 +17,7 @@ const useBuyModal = create<BuyModalStore>((set) => ({
   onClose: () => set({ isOpen: false }), 
   listingId: null,
   setListingId: (id) => set({listingId: id}),
-  mutateListing: () => {},
+  mutateListing: async() => {},
   setMutateListings: (fn) => set({mutateListing: fn})
 }));
 

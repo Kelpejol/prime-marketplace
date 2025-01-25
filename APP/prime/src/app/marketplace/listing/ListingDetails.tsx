@@ -7,9 +7,9 @@ import {useCallback, useMemo} from "react"
 import { getContract, NFT, toEther } from "thirdweb";
 import useDialog from "@/app/hooks/useDialog";
 import useBuyModal from "@/app/hooks/useBuyModal";
-import { getListing } from "@/app/contracts/directListing";
+import { getListing } from "@/app/contracts/listing"; 
 import { anvil } from "thirdweb/chains";
-import { fetchNFT } from "@/app/contracts/getPlatformInfo";
+import { fetchNFT } from "@/app/contracts/getPlatformInfo"; 
 import { client } from "@/app/client";
 import useSWR from "swr";
 import useOfferModal from "@/app/hooks/useOfferModal";
@@ -18,7 +18,7 @@ import {useWindowWidth} from '@react-hook/window-size'
 import { fetchTokenInfo } from "@/app/hooks/useCurrencyInfo";
 import SkeletonListingDetails from "@/app/components/card/ListingSkeletonCard"
 import { ipfsToHttp } from "@/app/utils/IpfsToHttp";
-import { chain } from "@/app/contracts/constant";
+import { chain } from "@/app/constant";
 
 
 
@@ -139,7 +139,7 @@ export default function ListingDetails({listingId}: ListingDetailsProps) {
     if (data) {
       buyModal.setListingId(data.listingId);
       dialog.onOpen();
-      buyModal.setMutateListings(mutate) 
+      buyModal.setMutateListings(async() => { mutate}) 
     } 
   }, [data, buyModal, dialog, mutate]);
 
@@ -282,7 +282,6 @@ export default function ListingDetails({listingId}: ListingDetailsProps) {
                 <div className='w-full border-gray-400 border-b-2 text-center md:text-base text-sm lg:text-lg font-bold'>Details</div>
                 <div className="w-full h-full flex-col items-stretch">
                   <div className='w-full h-[25%] border-gray-400 border-b-2 md:text-sm text-[9px] lg:text-lg font-semibold'>Asset Contract:{' '}<span className='text-[7px] md:text-xs break-words'>
-                    {/* 0x7A3d81bD8F80b61cF47927498Ee34CeCf81D944f  */}
                     {data.assetContract}
                     </span></div>
                   <div className='w-full h-[25%] border-gray-400 border-b-2 md:text-sm text-[9px] lg:text-lg font-semibold'>Asset Id:{' '}<span className='text-[7px] md:text-xs'>
@@ -301,7 +300,7 @@ export default function ListingDetails({listingId}: ListingDetailsProps) {
                 <div className='w-full border-gray-400 border-b-2 capitalize text-center md:text-base text-sm lg:text-lg font-bold'>Description</div>
                 <div className="md:text-base text-xs">
                 {data.nft?.metadata.description}
-                {/* dencnfddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddgdggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg  g ggggggggggg  */}
+                
                 </div>
                 
              </div>

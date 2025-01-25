@@ -8,7 +8,7 @@ import { anvil } from "thirdweb/chains";
 import { useCallback } from "react";
 import  { generatePayload, isLoggedIn, login } from "../actions/login";
 import { logout } from "../actions/logout";
-import { chain } from "../contracts/constant";
+import { chain } from "@/app/constant";
  
 
 interface ConnectWalletProps {

@@ -19,12 +19,13 @@ import Error from "@/app/components/Error";
 // import Image from "next/image";
 import { StaticImageData } from "next/dist/shared/lib/get-img-props";
 import { fetchNFT, listings } from "../contracts/getPlatformInfo";
-import { getContractAddress } from "../marketplace/Listings";
+// import { getContractAddress } from "../marketplace/Listings";
 import { fetchTokenInfo } from "../hooks/useCurrencyInfo";
 import { ipfsToHttp } from "../utils/IpfsToHttp";
 import CardContainer from "../components/card/CardContainer";
 import SkeletonCardContainer from "@/app/components/card/CardSkeleton";
 import MyListingsSidebar from "./MyListingsSidebar";
+import { nftContract } from "../contracts/getContract";
 // import { Contract } from "../utils/Contract";
 
 export type ListingItem = {
@@ -71,7 +72,7 @@ export default function MyListings() {
    
       const results = await Promise.allSettled(listingsData.map(async (listing) => {
         try {
-          const contract = getContractAddress(listing.assetContract)
+          const contract = nftContract(listing.assetContract)
             
           const nft = await fetchNFT(contract, listing);
           const currency = await fetchTokenInfo(listing.currency)
