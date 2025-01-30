@@ -1,8 +1,8 @@
-import { prepareContractCall, sendTransaction } from "thirdweb";
+import { prepareContractCall, sendTransaction, toWei } from "thirdweb";
 import { Account } from "thirdweb/wallets";
 import { contract } from "./getContract";
 import { NATIVE_TOKEN } from "@/app/constant";
-import { getListing } from "./listing";
+import {getListing} from "./getPlatformInfo"
 
 
 export const makeOffer = async (listingId: bigint, account: Account, duration : bigint, totalPrice: bigint) => {
@@ -10,8 +10,8 @@ export const makeOffer = async (listingId: bigint, account: Account, duration : 
   const data = await getListing(listingId);
     
    let fee: bigint | undefined
-    if(data.currency == NATIVE_TOKEN) {
-      fee= totalPrice
+    if(data?.currency == NATIVE_TOKEN) {
+      fee= toWei(totalPrice.toString())
     } 
     else {
       fee = undefined

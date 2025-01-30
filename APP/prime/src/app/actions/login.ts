@@ -7,7 +7,8 @@ import { createAuth } from 'thirdweb/auth';
 import { client } from '../client';
 import { generateAccount, privateKeyToAccount } from "thirdweb/wallets";
 
-const privateKey = process.env.PRIVATE_KEY;
+const privateKey = process.env.PRIVATE_KEY!;
+// const account =  generateAccount({ client });
 
  const auth = createAuth({
   domain: process.env.AUTH_DOMAIN || 'localhost:3000',
@@ -19,9 +20,8 @@ const privateKey = process.env.PRIVATE_KEY;
     statement: `Welcome to ${process.env.AUTH_DOMAIN || 'localhost:3000'}!, Sign the message to login.`,
 
   },
-   adminAccount: privateKey
-    ? privateKeyToAccount({ client, privateKey })
-    : await generateAccount({ client }),
+   adminAccount: privateKeyToAccount({ client, privateKey })
+    
 }) 
 
 

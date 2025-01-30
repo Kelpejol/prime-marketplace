@@ -7,9 +7,8 @@ import {useCallback, useMemo} from "react"
 import { getContract, NFT, toEther } from "thirdweb";
 import useDialog from "@/app/hooks/useDialog";
 import useBuyModal from "@/app/hooks/useBuyModal";
-import { getListing } from "@/app/contracts/listing"; 
 import { anvil } from "thirdweb/chains";
-import { fetchNFT } from "@/app/contracts/getPlatformInfo"; 
+import { fetchNFT, getListing } from "@/app/contracts/getPlatformInfo"; 
 import { client } from "@/app/client";
 import useSWR from "swr";
 import useOfferModal from "@/app/hooks/useOfferModal";
@@ -58,6 +57,9 @@ export default function ListingDetails({listingId}: ListingDetailsProps) {
     const fetchListing = useCallback(async () => {
     try {
       const listing = await getListing(BigInt(listingId));
+      if(!listing) {
+        return null
+      }
 
       const contract = getContract({
         client,
@@ -81,15 +83,16 @@ export default function ListingDetails({listingId}: ListingDetailsProps) {
   }, [listingId]);
 
   // Use SWR with optimized configuration
-  const { 
-    data, 
-    error,
-    isLoading,
-    mutate,
-  } = useSWR('listing/' + listingId, fetchListing, {
-    revalidateOnFocus: false,
-    revalidateOnReconnect: true
-    });
+  const { data, error, isLoading } = useSWR(
+    "listing/" + listingId,
+    fetchListing,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: true,
+      refreshInterval: 5000,
+      shouldRetryOnError: false,
+    },
+  );
 
     const listingStatus=useMemo(() => {
       console.log(data?.status)
@@ -120,16 +123,23 @@ export default function ListingDetails({listingId}: ListingDetailsProps) {
 
   // Memoized computations
   const endTime = useMemo(() => {
-    if (data?.endTimestamp && data?.startTimestamp) {
-      const remainingDays = Math.floor(Number(data.endTimestamp - data.startTimestamp)) / 86400;
-      if(remainingDays > 1) {
-        return `${remainingDays} Days left`
+    if (data?.endTimestamp) {
+      const now = Math.floor(Date.now() / 1000);
+      const remainingSeconds = Number(data.endTimestamp) - now;
+      const remainingDays = Math.ceil(remainingSeconds / 86400);
+
+      if (remainingDays <= 0) {
+        return "Expired";
+      } else if (remainingDays === 1) {
+        return "1 Day left";
+      } else {
+        return `${remainingDays} Days left`;
       }
-     return '1 Day left'
     }
     return null;
-  }, [data?.endTimestamp, data?.startTimestamp]);
+  }, [data?.endTimestamp]);
 
+  
   const rotationStyle = useMemo(() => ({
     backgroundImage: `linear-gradient(132deg, #5ddcff, #3c67e3 43%, #4e00c2)`,
   }), []);
@@ -139,9 +149,9 @@ export default function ListingDetails({listingId}: ListingDetailsProps) {
     if (data) {
       buyModal.setListingId(data.listingId);
       dialog.onOpen();
-      buyModal.setMutateListings(async() => { mutate}) 
+     
     } 
-  }, [data, buyModal, dialog, mutate]);
+  }, [data, buyModal, dialog]);
 
    const imageUrl = useMemo(() => {
     try {

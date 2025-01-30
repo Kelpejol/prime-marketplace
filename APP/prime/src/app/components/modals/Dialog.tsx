@@ -8,6 +8,10 @@ import toast from "react-hot-toast";
 import { showToast } from "../WalletToast";
 import useDialog from '@/app/hooks/useDialog';
 import Button from '../Button';
+import { useSWRConfig } from 'swr';
+import { usePathname } from 'next/navigation';
+import useListingsStore from '@/app/hooks/useListingsStore';
+
 
 
 interface DialogProps{
@@ -24,30 +28,44 @@ export const Dialog = ({
    const account = useActiveAccount();
       const buyModal = useBuyModal();
   const dialog = useDialog();
+      const { mutate } = useSWRConfig();
+      const pathname = usePathname();
+    const listingsStore = useListingsStore();
 
 
   useEffect(() => {
     setShowDialog(dialog.isOpen);
   }, [dialog.isOpen]);
 
-  const selectYes = () => {
+  const selectYes = async() => {
   console.log('Dialog Yes clicked');
   console.log('Account:', account);
   dialog.setYes();
   if(account) {
 
-  
+  try{
   dialog.onClose();
     console.log('Listing ID:', buyModal.listingId);
-  buyFromListing(account?.address!, buyModal.listingId!, account!).then((data) => {
+  await buyFromListing(account?.address!, buyModal.listingId!, account!).then(async (data) => {
     if(data.success) {
       toast.success(data.message!);
-      buyModal.mutateListing();
+    switch (true) {
+      case pathname === `/listing/${buyModal.listingId!}`:
+        await mutate(`/listing/${buyModal.listingId!}`);
+        break;
+      default:
+        await listingsStore.refreshListings();
+        break;
     }
+      }
        else {
         toast.error(data.message!)
        }
   })
+} catch (error: any) {
+  toast.error(error.message)
+  console.error(error)
+}
   
 } else {
    dialog.onClose();

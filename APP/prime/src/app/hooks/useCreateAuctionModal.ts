@@ -6,8 +6,7 @@ interface CreateAuctionModalStore {
   setOnMarket: (value: boolean) => void;
   onOpen: () => void;
   onClose: () => void;
-  mutateListing: () => void;
-  setMutateListings: (fn: () => void) => void
+  
 }
 
 const useCreateAuctionModal = create<CreateAuctionModalStore>((set) => ({
@@ -16,8 +15,7 @@ const useCreateAuctionModal = create<CreateAuctionModalStore>((set) => ({
   onOpen: () => set({ isOpen: true }),
   onClose: () => set({ isOpen: false }),
   setOnMarket: (onMarket) => set({ onMarket: onMarket}),
-  mutateListing: () => {},
-  setMutateListings: (fn) => set({mutateListing: fn})
+  
 }));
 
 export default useCreateAuctionModal;

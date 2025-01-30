@@ -2,8 +2,8 @@
 import { useCurrencyInfo } from "@/app/hooks/useCurrencyInfo";
 import Image from "next/image";
 import Select from "react-select";
-import {useMemo} from "react"
-import { NATIVE_TOKEN } from "../constant"; 
+import { useMemo } from "react";
+import { NATIVE_TOKEN } from "../constant";
 
 export type CurrencySelectValue = {
   symbol: string;
@@ -16,40 +16,35 @@ export type CurrencySelectValue = {
 };
 
 interface CurrencySelectProps {
-  value: CurrencySelectValue | undefined;
-  onChange: (selectedOptions: CurrencySelectValue | null) => void;
+  value: CurrencySelectValue | undefined; // Default selected value
+  onChange: (selectedOption: CurrencySelectValue | null) => void; // Function to handle selection
 }
 
+export default function CurrencySelect({ value, onChange }: CurrencySelectProps) {
+  const { isLoading, currency } = useCurrencyInfo();
 
-export default function CurrencySelect({value, onChange}: CurrencySelectProps) {
-  const { isLoading, error, currency } = useCurrencyInfo();
-
+  // Format the currency options
   const formattedCurrency = useMemo(() => {
-    return currency.map(item => 
-      item.address === "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0" 
-        ? { ...item, address: NATIVE_TOKEN } 
+    return currency.map((item) =>
+      item.address === "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0"
+        ? { ...item, address: NATIVE_TOKEN }
         : item
     );
   }, [currency]);
 
-
-
   return (
-    <div className="">
+    <div>
       <Select
-      required
         placeholder="Currency"
         isClearable
         isLoading={isLoading}
         options={formattedCurrency}
-        value={value}
-       onChange={onChange}
+        value={value} // Pre-select the value
+        onChange={(selectedOption) => onChange(selectedOption as CurrencySelectValue | null)} // Pass selected value to parent
         formatOptionLabel={(option) => (
-          <div className="flex flex-row items-center gap-3 z-60">
+          <div className="flex flex-row items-center gap-3">
             <Image src={option.image.thumb} alt={option.symbol} width={24} height={24} />
-            <div>
-              {option.symbol.toUpperCase()}
-            </div>
+            <div>{option.symbol.toUpperCase()}</div>
           </div>
         )}
         classNames={{
@@ -64,7 +59,7 @@ export default function CurrencySelect({value, onChange}: CurrencySelectProps) {
             ...theme.colors,
             primary25: "#ffe4e4",
             primary: "black",
-          }
+          },
         })}
       />
     </div>

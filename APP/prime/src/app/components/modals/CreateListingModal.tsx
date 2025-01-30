@@ -323,7 +323,7 @@ const [basicResult, advancedResult, proResult] = await Promise.all([
        
          <CurrencySelect
           value={selectedValue}
-          onChange={handleSelectedValue}
+          onChange={(selectedValue) => handleSelectedValue(selectedValue)}
          />
         
        

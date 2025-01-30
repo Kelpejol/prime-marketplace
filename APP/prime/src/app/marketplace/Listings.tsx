@@ -58,16 +58,16 @@ export default function Listings() {
                 src={ipfsToHttp(nftDetails.metadata.image) || ''}
                 name={nftDetails.metadata.name || 'Unnamed NFT'}
                 tokenId={`${listing.tokenId}`}
-                price={`${price}`}
+                price={price}
                 listingId={listing.listingId}
                 symbol={currency?.symbol || ''}
                 status={listing.status}
                 showButton
               />
             );
-          } catch (error) {
-            console.error(`Error processing listing ${listing.listingId}:`, error);
-            return null;
+          } catch (error: any) {
+            console.error(error.message)
+            throw error
           }
         })
   
@@ -77,9 +77,9 @@ export default function Listings() {
         items: validCards,
         totalCount: pageListings.length 
       };
-    } catch (error) {
-      console.error('Error fetching listings page:', error);
-      throw error;
+    } catch (error: any) {
+        console.error(error.message)
+        throw error
     }
   }, []); 
 
@@ -87,9 +87,10 @@ export default function Listings() {
     try {
       const totalListing = await listings(); // New method needed
       return totalListing.length;
-    } catch (error) {
-      console.error('Error fetching initial total count:', error);
-      return 0;
+    } catch (error: any) {
+      
+      console.error(error.message)
+      throw error
     }
   }, []);
 
@@ -99,7 +100,7 @@ export default function Listings() {
     fetchData: fetchListingsPage,
     revalidateKey: 'listings',
     getTotalCount: totalListing, // Pass the function to get total count
-    initialTotalCount: null,
+    initialTotalCount: undefined,
   });
 
   useEffect(() => {
@@ -113,7 +114,7 @@ export default function Listings() {
     return <Error error={error} />;
   }
 
-  if (initialLoading || !pages) {
+  if (initialLoading || !pages && !error) {
     return (
       <Container>
         <SkeletonCardContainer />
@@ -121,7 +122,7 @@ export default function Listings() {
     );
   }
 
-  if (!initialLoading && allListings?.length === 0) {
+  if (!initialLoading && allListings?.length === 0 && !error) {
     return (
       <EmptyState
         title="Oops!"

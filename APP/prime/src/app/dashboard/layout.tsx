@@ -16,11 +16,10 @@ export default function Layout({
 }>) {
   return (
    
-       <Suspense>  
-      <header>
+       
+     <>
       <NavBar/>
-     </header>
      { children}
-     </Suspense>
+    </>
   );
 }

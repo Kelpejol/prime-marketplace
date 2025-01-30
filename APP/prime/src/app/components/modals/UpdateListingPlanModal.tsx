@@ -1,129 +1,203 @@
-// "use client"
+"use client";
+
+import React, { useCallback, useEffect, useState } from "react";
+import Heading from "@/app/components/Heading";
+import {  updateListingPlan } from "@/app/contracts/listing";
+import { useActiveAccount } from "thirdweb/react";
+import Modal from "./Modal";
+import toast from "react-hot-toast";
+import { showToast } from "@/app/components/WalletToast";
+import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
+import { getListingType } from "@/app/contracts/getPlatformInfo";
+import { TimeHelper } from "@/app/utils/timeHelper";
+import useMyListingsStore from "@/app/hooks/useMyListingsStore";
 
 
 
+interface UpdateListingPlanModalProps {
+  listingId: bigint;
+  onClose: () => void;
+  isOpen: boolean;
+  listingPlan: number | undefined;
+  onSuccess: () => void;
+}
 
-// import React, { useState } from 'react';
-// import  Heading  from '@/app/components/Heading';
-// import { TimeHelper } from '@/app/utils/timeFormatter';
-// import { ListingType, updateListingPlan} from '@/app/contracts/listing';
-// import { useActiveAccount } from 'thirdweb/react';
-// import Modal from './Modal';
-// import toast from 'react-hot-toast';
-// import { showToast } from '@/app/components/WalletToast';
-// import { FieldValues, SubmitHandler,  } from 'react-hook-form';
+interface LISTING_TYPE_DATA {
+  duration?: number;
+  price?: string;
+}
 
+enum LISTING_TYPE {
+  BASIC,
+  ADVANCED,
+  PRO,
+}
 
-
-// interface ListingTypeData {
-//     duration?: number;
-//     price?: string;
-// }
-
-// interface UpdateListingPlanModalProps {
-//   listingId: bigint,
-//   onClose: () => void,
-//   isOpen: boolean
-// }
-
-// const UpdateListingPlanModal = ({listingId, onClose, isOpen}:UpdateListingPlanModalProps) => {
-//   const account = useActiveAccount();
-//   const [listingPlan, setListingPlan] = useState<ListingType>(ListingType.BASIC);
-//   const [basicData, setBasicData] = useState<ListingTypeData>();
-//   const [advancedData, setAdvancedData] = useState<ListingTypeData>();
-//   const [proData, setProData] = useState<ListingTypeData>();
-//   const [isLoading, setIsLoading] = useState(false);
-//   const [isDisabled, setIsDisabled] = useState(false);
-
-//   const handleListingPlan = (plan: ListingType) => {
-//     setListingPlan(plan);
-//   }
-
-//   // const handleUpdateListingPlan = () => {
-//   //   setIsDisabled(true);
-//   //   updateListingPlan(listingId, listingPlan, account!).then((data) => {
-//   //     if(data.success){
-//   //       toast.success(data.message!);
-//   //       onClose();
-//   //     } else {
-//   //       showToast();
-//   //     }
-//   //   })
-//   // }
+const UpdateListingPlanModal = ({
+  listingId,
+  onClose,
+  isOpen,
+  listingPlan,
+  onSuccess
+}: UpdateListingPlanModalProps) => {
+  
+ 
+  const [isDisabled, setIsDisabled] = useState(false);
+    const [selectedType, setSelectedType] = useState<LISTING_TYPE>(listingPlan!);
+  
+  const account = useActiveAccount();
+  const [basicData, setBasicData] = useState<LISTING_TYPE_DATA>({})
+  const [advancedData, setAdvancedData] = useState<LISTING_TYPE_DATA>({})
+  const [proData, setProData] = useState<LISTING_TYPE_DATA>({})
+      const listingsStore = useMyListingsStore();
 
 
-//    const onSubmit: SubmitHandler<FieldValues> = (data) => {
-//      if (account) {
-//       setIsDisabled(true);
-//      updateListingPlan(listingId, listingPlan, account!).then((data) => {
-//       if(data.success){
-//         toast.success(data.message!);
-//         onClose();
+  const {
       
-//         // updateListingModal.mutateListings();
-//       }
-//       else {
-//         toast.error(data.message!);
-//       }
-//       setIsDisabled(false);
-     
-//     })
+      handleSubmit,
+      formState: { errors },
+      setValue,
+    } = useForm<FieldValues>({
+      defaultValues: {
+        listingType: null,
+      },
+       mode: 'onSubmit', // Validate on form submission
+      reValidateMode: 'onSubmit'
+    })
+  
+
+   const setCustomValues = useCallback((key: string, value: LISTING_TYPE) => {
+    setValue(key, value, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  }, [setValue]);
+  
+
+ 
+
+  
+  
+
+  const handleSelect = (type: LISTING_TYPE) => {
+    setSelectedType(type);
+    setCustomValues("listingType", type);
+  };
+
+  useEffect(() => {
+    const fetchListingData = async() => {
+      try{
+  const [basicResult, advancedResult, proResult] = await Promise.all([
+     getListingType(LISTING_TYPE.BASIC),
+     getListingType(LISTING_TYPE.ADVANCED),
+     getListingType(LISTING_TYPE.PRO)
+  
+  ]);
+   setBasicData({
+          duration: TimeHelper.secondsToMonths(basicResult?.[0]),
+          price: basicResult?.[1].toString()
+        });
         
-//      } else {
-//        showToast();  
-//      }
-//   }  
+        setAdvancedData({
+          duration: TimeHelper.secondsToMonths(advancedResult?.[0]),
+          price: advancedResult?.[1].toString()
+        });
+        
+        setProData({
+          duration: TimeHelper.secondsToMonths(proResult?.[0]),
+          price: proResult?.[1].toString()
+        });
+  
+      } catch (error) {
+        console.error('Error fetching listing data:', error)
+      }
+    }
+  
+    fetchListingData();
+  }, [])
+
+  const onSubmit: SubmitHandler<FieldValues> = async (data) => {
+    if (account) {
+        try{
+      setIsDisabled(true);
+      await updateListingPlan(listingId, selectedType, account!).then(async(data) => {
+        if (data.success) {
+          toast.success(data.message!);
+          
+
+          onClose();
+          onSuccess();
+           await listingsStore.refreshListings();
 
 
-//   const bodyContent = (
-//        <div className="flex flex-col gap-6 ">
-//          <Heading title="Choose Listing Plan" subtitle="Select the listing plan of your choice" titleClassName="text-xl font-bold ml-4" subtitleClassName="font-light text-sm text-neutral-500 mt-1 ml-4"/>
-   
-//         <div className="flex w-full justify-evenly items-center ">
+        } else {
+          toast.error(data.message!);
+        }
+        });
+    } catch(error: any) {
+        toast.error(error.message)
+        console.error(error)
+    } finally{
+        setIsDisabled(false);
+    }
+      
+    } else {
+      showToast();
+    }
+  };
 
-//           <div className={`border border-gray-300 w-[30%] rounded-lg py-4 px-2 cursor-pointer ${listingPlan == ListingType.BASIC && ("bg-black text-white")}`} onClick={() => { handleListingPlan(ListingType.BASIC)}}>
-//              <Heading title="Basic" subtitle={`$${basicData?.price}`} center titleClassName={`md:text-xl font-bold ${listingPlan == ListingType.BASIC && ("text-white")}`} subtitleClassName={`text-xs md:text-base font-light mt-1 ${listingPlan == ListingType.BASIC && ("text-white")}`}/>
-//               <div className={`flex items-center justify-center font-semibold text-xs md:text-lg mt-1 ${listingPlan == ListingType.BASIC && ("text-white")}`}>
-//                         {TimeHelper.formatDuration(basicData?.duration!)}
-//               </div>
-//            </div>
 
-//            <div className={`border border-gray-300 w-[35%] rounded-lg py-5 px-2 cursor-pointer ${listingPlan == ListingType.ADVANCED && ("bg-black text-white")}`} onClick={() => { handleListingPlan(ListingType.ADVANCED)}}>
-//              <Heading title="Advanced" subtitle={`$${advancedData?.price}`} center titleClassName={`md:text-xl font-bold ${listingPlan == ListingType.ADVANCED && ("text-white")}`}  subtitleClassName={`text-xs md:text-base font-light mt-1 ${listingPlan == ListingType.ADVANCED && ("text-white")}`}/>
-//               <div className={`flex items-center justify-center font-semibold text-xs md:text-lg mt-1 ${listingPlan == ListingType.ADVANCED && ("text-white")}`}>
-//                          {TimeHelper.formatDuration(advancedData?.duration!)}
-//               </div>
-//            </div>
+let bodyContent = (
+    <div className="flex flex-col  gap-7">
+     <Heading
+     title="Choose Listing Plan"
+     subtitle="Select the listing plan of your choice"
+     />
+   <div className="flex justify-between space-x-3">
+      <div onClick={() => handleSelect(LISTING_TYPE.BASIC)} className={`${selectedType == LISTING_TYPE.BASIC ? "bg-black text-white" : "border-gray-300"} flex-1 cursor-pointer rounded-lg border p-4 text-center`}> 
+        <div className="text-center">
+         <div className="md:text-lg text-sm font-bold">Basic</div>
+      <div className={`${selectedType == LISTING_TYPE.BASIC && "text-white"} font-light text-neutral-500 mt-2 md:text-sm text-[10px]`}>
+        ${basicData.price}</div>
+      <div className={`${selectedType == LISTING_TYPE.BASIC && "text-white"} text-black font-semibold mt-1 md:text-sm text-[10px]`}>
+        {TimeHelper.formatDuration(basicData.duration).toString()}</div>
+        </div>
+         </div>
+ <div onClick={() => handleSelect(LISTING_TYPE.ADVANCED)} className={`${selectedType == LISTING_TYPE.ADVANCED ? "bg-black text-white" : "border-gray-300"} flex-1 cursor-pointer rounded-lg border p-4 text-center`}>   
+  <div className="text-center">
+         <div className="md:text-lg text-sm font-bold">Advanced</div>
+      <div className={`${selectedType == LISTING_TYPE.ADVANCED && "text-white"} font-light text-neutral-500 mt-2 md:text-sm text-[10px]`}>
+        ${advancedData.price}</div>
+      <div className={`${selectedType == LISTING_TYPE.ADVANCED && "text-white"} text-black font-semibold mt-1 md:text-sm text-[10px]`}>{TimeHelper.formatDuration(advancedData.duration).toString()}</div>
+        </div>  
+  
+     </div>
+ <div onClick={() => handleSelect(LISTING_TYPE.PRO)} className={`${selectedType == LISTING_TYPE.PRO ? "bg-black text-white" : "border-gray-300"} flex-1 cursor-pointer rounded-lg border p-4 text-center`}>   
+  <div className="text-center">
+         <div className="md:text-lg text-sm font-bold">Pro</div>
+      <div className={`${selectedType == LISTING_TYPE.PRO && "text-white"} font-light text-neutral-500 mt-2 md:text-sm text-[10px]`}>${proData.price}</div>
+      <div className={`${selectedType == LISTING_TYPE.PRO && "text-white"} text-black font-semibold mt-1 md:text-sm text-[10px]`}>{TimeHelper.formatDuration(proData.duration).toString()}</div>
+        </div>  
+  
+     </div>
+     </div>
 
-//            <div className={`border border-gray-300 w-[30%] rounded-lg py-4 px-2 cursor-pointer ${listingPlan == ListingType.PRO && ("bg-black text-white")}`} onClick={() => { handleListingPlan(ListingType.PRO)}}>
-//              <Heading title="Pro" subtitle={`$${proData?.price}`} center titleClassName={`md:text-xl font-bold ${listingPlan == ListingType.PRO && ("text-white")}`}  subtitleClassName={`text-xs md:text-base font-light mt-1 ${listingPlan == ListingType.PRO && ("text-white")}`}/>
-//               <div className={`flex items-center justify-center font-semibold text-xs md:text-lg mt-1 ${listingPlan == ListingType.PRO && ("text-white")}`}>
-//                         {TimeHelper.formatDuration(proData?.duration!)}
-//               </div>
-//            </div>
-            
-                
-//             </div>
-//             </div>
-       
-//      )
+    </div>
+      
+  );
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      onSubmit={handleSubmit(onSubmit)}   
+      actionlabel={"Submit"}
+      body={bodyContent}
+      title="Update Listing Plan"
+      disabled={isDisabled}
+    />
     
+  );
+};
 
-//   return (
-//      <Modal
-//         isOpen={isOpen}
-//         onClose={onClose}
-//         forwardLabel='Update'
-//         forward={onSubmit}
-//         body={bodyContent}
-//         backward={() => {}}
-//         backwardLabel=''
-//         title="Update Listing Plan"
-//         disabled={isDisabled}
-//     />
-//   )
-// }
-
-// export default UpdateListingPlanModal;
-              
-
+export default UpdateListingPlanModal;

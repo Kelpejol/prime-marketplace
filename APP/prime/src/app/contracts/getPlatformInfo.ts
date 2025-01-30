@@ -1,6 +1,6 @@
 import { ContractOptions, readContract } from "thirdweb";
 import { contract } from "./getContract";
-import { ListingType } from "./listing";
+import { LISTING_TYPE } from "./listing";
 
 export const fetchListingPlanFee = async (
   price: bigint, 
@@ -14,13 +14,12 @@ export const fetchListingPlanFee = async (
     });
     return fee;
   } catch (error) {
-    console.error("Error fetching listing plan fee:", error);
     throw error;
   }
 };
 
 export const fetchListingPlanInfo = async (
-  listingType: ListingType
+  listingType: LISTING_TYPE
 ): Promise<bigint> => {
   try {
     
@@ -34,7 +33,6 @@ export const fetchListingPlanInfo = async (
 
     if (!result) {
       console.warn(`No data returned for listing type ${listingType}`);
-      throw new Error("No data returned from getListingType");
     }
     
     const returnValue = result[1] as bigint;
@@ -42,12 +40,6 @@ export const fetchListingPlanInfo = async (
     return returnValue;
 
   } catch (error) {
-    
-    if (error instanceof Error) {
-      console.error('Error name:', error.name);
-      console.error('Error message:', error.message);
-    }
-
     throw error;
   }
 };
@@ -67,10 +59,8 @@ export const getApprovedCurrency = async () => {
 
   } catch (error) {
     
-  console.log("error getting approved currency", error)
-    // Return an empty array instead of throwing
-    return [];
-  }
+   throw error
+}
 }
 
 export const getListingType = async(params: number) => {
@@ -82,7 +72,7 @@ export const getListingType = async(params: number) => {
     });
     return result
   } catch (error) {
-    console.error(error)
+    throw error
   }
 }
 
@@ -106,10 +96,8 @@ export const listings = async () => {
     return result;
 
   } catch (error) {
+    throw error
     
-  console.log("error creating listing")
-    // Return an empty array instead of throwing
-    return [];
   }
 }
 
@@ -132,24 +120,72 @@ export async function fetchNFT(contract: Readonly<ContractOptions<[]>>, listing:
 
     return nftData;
   } catch (error) {
-    console.error('Error fetching NFT:', error);
-    return null;
+    throw error
   }
 }
 
+export async function getListing(listingId: bigint) {
+  try{
+  const data = await readContract({
+    contract,
+    method: "getListing",
+    params: [listingId]
+  });
+  return data;
+} catch(error: any) {
+  console.error(error.message)
+}
+}
 
 
 export const LimitedListings = async (start = 0, limit: null | number = null) => {
   try {
     const allListings = await listings();
+    if(allListings.length > 0){
     const reversedListings = [...allListings].reverse();
     
     if (limit !== null) {
       return reversedListings.slice(start, start + limit);
     }
-    
     return reversedListings;
+  }
+    
+    return 0;
   } catch (error) {
-    console.error('Error fetching listings:', error);
+    throw error
+    
   }
 };
+
+
+
+
+
+
+
+
+
+
+export const getApprovedBuyer = async (listingId: bigint) => {
+  try {
+      const data = await readContract({
+     contract,
+     method:"getApprovedBuyer",
+     params:[listingId]
+    })
+
+   return data;  
+  }
+  catch (error) {
+   
+    throw error;
+    
+  }
+    
+}
+
+
+
+
+
+

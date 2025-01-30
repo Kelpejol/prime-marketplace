@@ -5,13 +5,14 @@ import { useState } from "react";
 import { FieldValues, useForm} from "react-hook-form";
 import { useRouter } from "next/navigation";
 import Heading from "../Heading";
-
-
+import { usePathname } from "next/navigation";
+import { useSWRConfig } from 'swr';
 import useBuyModal from "@/app/hooks/useBuyModal";
 import { useActiveAccount } from "thirdweb/react";
 import { buyFromListing } from "@/app/contracts/listing";
 import toast from "react-hot-toast";
 import { showToast } from "../WalletToast";
+import useListingsStore from "@/app/hooks/useListingsStore"
 
 
 
@@ -21,7 +22,9 @@ export default function BuyModal() {
    const account = useActiveAccount();
     const [isDisabled, setIsDisabled] = useState(false);
       const buyModal = useBuyModal();
-
+      const { mutate } = useSWRConfig();
+    const pathname = usePathname();
+    const listingsStore = useListingsStore();
 
   
   const {
@@ -43,14 +46,21 @@ export default function BuyModal() {
           toast.success(data.message!);
           buyModal.onClose();
           reset();
-          await buyModal.mutateListing();
+           switch (true) {
+      case pathname === `/listing/${buyModal.listingId!}`:
+          await mutate(`/listing/${buyModal.listingId!}`);
+          break
+          default:
+            await listingsStore.refreshListings()
+            break
+            }
         } else {
           toast.error(data.message!)
         }
       })}
 
-      catch (error) {
-        toast.error("Unexpected error occurred, Try again");
+      catch (error: any) {
+        toast.error(error.message);
         console.error(error)
       } finally {
         setIsDisabled(false);

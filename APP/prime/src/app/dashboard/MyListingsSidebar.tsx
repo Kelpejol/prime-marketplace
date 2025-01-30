@@ -1,36 +1,65 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import {  useState, useEffect } from 'react'
 import { X, Edit, Trash, DollarSign, UserCheck, UserMinus } from 'lucide-react'
 import { ListingItem } from './MyListings'
-import Card from '@/app/components/card/Card'
 import Image from 'next/image'
-// import { cancelListing, removeApprovedBuyerForListing, approveBuyerForListing } from '../contracts/listing'
+import { cancelListing, removeApprovedBuyerForListing } from '../contracts/listing'
 import { useActiveAccount } from "thirdweb/react";
 import toast from "react-hot-toast";
 import { showToast } from '@/app/components/WalletToast';
-// import UpdateListingModal from '../components/modals/UpdateListingModal'
-// import UpdateListingPlanModal from '../components/modals/UpdateListingPlanModal'
-// import { getApprovedBuyer } from '../contracts/listingInfo'
-// import UpdateListingModal from '../components/modal/UpdateListingModal'
-// import UpdateListingPlanModal from '../components/modal/UpdateListingPlanModal'
+import UpdateListingModal from '../components/modals/UpdateListingModal'
+import UpdateListingPlanModal from '../components/modals/UpdateListingPlanModal'
+import ApproveBuyerModal from '../components/modals/ApproveBuyerModal'
+import { shortenAddress } from 'thirdweb/utils'
+import { ZERO_ADDRESS } from 'thirdweb'
+import useMyListingsStore from '../hooks/useMyListingsStore'
+import { getApprovedBuyer } from '../contracts/getPlatformInfo'
+
 
 
 interface MyListingsSidebarProps {
   listing: ListingItem
   onClose: () => void,
-  isVisible: boolean
+  isVisible: boolean,
 }
 
 export default function MyListingsSidebar({ listing, onClose, isVisible }: MyListingsSidebarProps) {
   const account = useActiveAccount();
-  const [buyer, setBuyer ] = useState<string | undefined>(undefined);
   const [openUpdateListingModal, setOpenUpdateListingModal] = useState<boolean>(false);
   const [openUpdateListingPlanModal, setOpenUpdateListingPlanModal] = useState<boolean>(false);
+  const [openApprovedBuyerForListing, setOpenApprovedBuyerForListing] = useState<boolean>(false);
+  const [isDisabled, setIsDisabled] = useState<boolean>(false);
+      const listingsStore = useMyListingsStore();
+       const [buyer, setBuyer] = useState<string | null>(null);
+       const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const handleClose = () => {
-    setTimeout(onClose, 300)
-  }
+
+       useEffect(() => {
+         const fetchBuyer = async () => {
+           if (listing && listing.listingId) {
+             try {
+               console.log("Fetching buyer for listing:", listing.listingId);
+                      setIsLoading(true);
+
+               const buyer = await getApprovedBuyer(listing.listingId);
+               console.log("Received buyer:", buyer);
+               setBuyer(buyer);
+               setIsLoading(false)
+             } catch (error: any) {
+               console.error("Error fetching buyer:", error);
+               toast.error(error.message);
+             } 
+           }
+         };
+
+         fetchBuyer();
+       }, [listing]);
+
+
+  // const handleClose = () => {
+  //   setTimeout(onClose, 300)
+  // }
 
 
   const handleOpenUpdateListingModal = () => {
@@ -41,57 +70,6 @@ export default function MyListingsSidebar({ listing, onClose, isVisible }: MyLis
     setOpenUpdateListingModal(false);
   }
 
-//   const handleRemoveApprovedBuyerForListing = () => {
-//      if (account) {
-//       //  setIsDisabled(true);
-//     removeApprovedBuyerForListing(listing?.listingId, account).then((data) => {
-//       if(data.success){
-//         toast.success(data.message!);
-//         onClose();
-//       } else {
-//         toast.error(data.message!);
-//       }
-
-//       // setIsDisabled(false);
-//     })
-//     }  else {
-//         showToast();
-//       }
-//   }
-
-//   const handleCancel = () => {
-//     if (account) {
-//       //  setIsDisabled(true);
-//       cancelListing(listing.listingId, account).then((data) => {
-//       if(data.success){
-//         toast.success(data.message!);
-//         onClose();
-//       } else {
-//         toast.error(data.message!);
-//       }
-
-//       // setIsDisabled(false);
-//     })
-//     }  else {
-//         showToast();
-//       }
-   
-
-//   }
-
-
-  
-
-//   const approvedBuyer = async () => {
-//     const buyer = await getApprovedBuyer(listing?.listingId);
-//     setBuyer(buyer);
-//   }
-  
-//   useEffect(() => {
-//     approvedBuyer();
-//   }, [])
-  
-
   const handleOpenUpdateListingPlan = () => {
     setOpenUpdateListingPlanModal(true);
   }
@@ -99,30 +77,92 @@ export default function MyListingsSidebar({ listing, onClose, isVisible }: MyLis
     setOpenUpdateListingPlanModal(false);
   }
 
+  const handleOpenApprovedBuyerForListing = () => {
+    setOpenApprovedBuyerForListing(true);
+  }
+
+  const handleCloseApprovedBuyerForListing = () => {
+    setOpenApprovedBuyerForListing(false)
+  }
 
 
+  const handleRemoveApprovedBuyerForListing = async() => {
+  
+     if (account) {
+      try{
+       setIsDisabled(true);
+    await removeApprovedBuyerForListing(listing?.listingId, account).then(async(data) => {
+      if(data.success){
+        toast.success(data.message!);
+           onClose()
+           await listingsStore.refreshListings();
+
+      } else {
+        toast.error(data.message!);
+      }
+    
+    })
+  } catch(error: any) {
+    toast.error(error.message);
+    console.error(error)
+  } finally{
+    setIsDisabled(false)
+  }
+    }  else {
+        showToast();
+      }
+  }
+
+  const handleCancel = async() => {
+    if (account) {
+      try{
+       setIsDisabled(true);
+      await cancelListing(listing.listingId, account).then(async(data) => {
+      if(data.success){
+        toast.success(data.message!);
+      
+         onClose()
+       await listingsStore.refreshListings();
+      } else {
+        toast.error(data.message!);
+      }      
+    })
+  } catch(error: any){
+    toast.error(error.message)
+    console.error(error)
+  } finally{
+   setIsDisabled(false)
+  }
+    }  else {
+        showToast();
+      }
+   
+
+  }
+
+
+  
   return (
     <>
       {/* Backdrop overlay */}
-      <div 
+      <div
         className={`fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 md:hidden ${
-          isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          isVisible ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
-        onClick={handleClose}
+        onClick={onClose}
       />
 
       {/* Sidebar Container */}
-      <div 
+      <div
         className={`fixed inset-y-0 right-0 z-50 flex flex-col h-[100vh]
           w-full sm:max-w-[calc(100vw-8rem)] md:max-w-[320px] lg:max-w-[460px]
           transform transition-transform duration-300 ease-in-out
-          ${isVisible ? 'translate-x-0' : 'translate-x-full'}
+          ${isVisible ? "translate-x-0" : "translate-x-full"}
           bg-white shadow-xl`}
       >
         <div className="flex items-center justify-end p-2 sm:p-4 border-b border-gray-200">
-          
-          <button 
-            onClick={handleClose}
+          <button
+            onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-full text-gray-500 hover:text-gray-700 transition-colors"
           >
             <X className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -135,19 +175,18 @@ export default function MyListingsSidebar({ listing, onClose, isVisible }: MyLis
             {/* Card */}
             {listing && (
               <div className="w-full max-w-[90vw] sm:max-w-none mx-auto">
-
                 <div className="relative h-[350px]">
-                          <Image
-                            src={listing.src}
-                            alt={listing.alt}
-                            fill
-                            style={{ objectFit: 'cover' }}
-                            className="transition-transform duration-500 ease-in-out group-hover:scale-110"
-                            sizes="(max-width: 640px) 80vw, (max-width: 1024px) 40vw, 20vw"
-                            priority
-                          />
-                        </div>
-               
+                  <Image
+                    src={listing.src}
+                    alt={listing.name}
+                    fill
+                    style={{ objectFit: "cover" }}
+                    className="transition-transform duration-500 ease-in-out group-hover:scale-110"
+                    sizes="(max-width: 640px) 80vw, (max-width: 1024px) 40vw, 20vw"
+                    priority
+                  />
+                </div>
+
                 {/* <Card
                   key={listing.key}
                   alt={listing.alt}
@@ -176,10 +215,11 @@ export default function MyListingsSidebar({ listing, onClose, isVisible }: MyLis
                   Edit Listing
                 </button>
                 <button
-                  onClick={() => {}}
+                  onClick={handleCancel}
                   className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold 
                     py-2.5 sm:py-3 px-4 rounded flex items-center justify-center 
                     transition-colors text-sm sm:text-base"
+                  disabled={isDisabled}
                 >
                   <Trash className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                   Cancel Listing
@@ -200,54 +240,88 @@ export default function MyListingsSidebar({ listing, onClose, isVisible }: MyLis
             {/* Buyers Section */}
             <div className="space-y-4">
               <h3 className="text-base sm:text-lg md:text-xl font-semibold">
-                Manage Buyers
+                Manage Buyer
               </h3>
               <div className="space-y-2 max-h-[40vh] overflow-y-auto rounded-lg border border-gray-200">
-                {/* {['buyer1'].map((buyerId) => ( */}
-                  <div 
-                    
-                    className="flex flex-col sm:flex-row sm:items-center justify-between 
-                      p-3 sm:p-4 hover:bg-gray-50 transition-colors border-b 
-                      last:border-b-0 border-gray-200 gap-3 sm:gap-4"
-                  >
-                    
-                    <span className="font-medium text-sm sm:text-base">
-                      {
-                    buyer ? `Buyer ${buyer}` : "No approved buyer, Approve a buyer"}
-                    </span>
-                    <div className="flex gap-2 sm:gap-3">
-                      <button 
-                        className="flex-1 sm:flex-none bg-green-500 hover:bg-green-600 
-                          text-white font-semibold py-2 px-3 rounded text-xs sm:text-sm 
-                          flex items-center justify-center transition-colors"
-                        onClick={() => {}}
-                      >
-                        <UserCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" />
-                        Approve
-                      </button>
+                <div
+                  className="flex flex-col sm:flex-row sm:items-center justify-between 
+          p-3 sm:p-4 hover:bg-gray-50 transition-colors border-b 
+          last:border-b-0 border-gray-200 gap-3 sm:gap-4"
+                >
+                  {isLoading ? (
+                    <div className="font-bold text-sm sm:text-base">
+                      Loading...
+                    </div>
+                  ) : (
+                    <>
+                      {buyer && buyer !== ZERO_ADDRESS ? (
+                        <div className="font-bold text-sm sm:text-base">
+                          {shortenAddress(buyer)}
+                        </div>
+                      ) : (
+                        <div className="font-bold text-sm sm:text-base">
+                          No approved buyer, Approve a buyer
+                        </div>
+                      )}
+                    </>
+                  )}
 
-                      {buyer && (
-                        <button 
+                  <div className="flex gap-2 sm:gap-3">
+                    {!isLoading && buyer && buyer !== ZERO_ADDRESS ? (
+                      <button
                         className="flex-1 sm:flex-none bg-red-500 hover:bg-red-600 
-                          text-white font-semibold py-2 px-3 rounded text-xs sm:text-sm 
-                          flex items-center justify-center transition-colors"
-                        onClick={() => {}}
+              text-white font-semibold py-2 px-3 rounded text-xs sm:text-sm 
+              flex items-center justify-center transition-colors"
+                        onClick={handleRemoveApprovedBuyerForListing}
                       >
                         <UserMinus className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" />
                         Remove
                       </button>
-                      )}
-                    </div>
+                    ) : (
+                      !isLoading && (
+                        <button
+                          className="flex-1 sm:flex-none bg-green-500 hover:bg-green-600 
+                text-white font-semibold py-2 px-3 rounded text-xs sm:text-sm 
+                flex items-center justify-center transition-colors"
+                          onClick={handleOpenApprovedBuyerForListing}
+                        >
+                          <UserCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" />
+                          Approve
+                        </button>
+                      )
+                    )}
                   </div>
-                {/* ))} */}
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-  {/* <UpdateListingModal listing={listing} onClose={handleCloseUpdateListingModal} isOpen={openUpdateListingModal} />
-  <UpdateListingPlanModal listingId={listing?.listingId} onClose={handleCloseUpdateListingPlan} isOpen={openUpdateListingPlanModal} /> */}
+      {listing && (
+        <>
+          <UpdateListingModal
+            listing={listing}
+            onClose={handleCloseUpdateListingModal}
+            isOpen={openUpdateListingModal}
+            onSuccess={onClose}
+          />
+          <UpdateListingPlanModal
+            listingId={listing.listingId}
+            onClose={handleCloseUpdateListingPlan}
+            isOpen={openUpdateListingPlanModal}
+            listingPlan={listing.listingType}
+            onSuccess={onClose}
+          />
+          <ApproveBuyerModal
+            listingId={listing.listingId}
+            onClose={handleCloseApprovedBuyerForListing}
+            isOpen={openApprovedBuyerForListing}
+            onSuccess={onClose}
+          />
+        </>
+      )}
     </>
-  )
-}
+  );
+  } 
+  
