@@ -83,5 +83,9 @@ export async function getAuthResult(jwtValue: string) {
   return authResult;
 } catch(error){
   console.error(error)
+  return {
+    valid: false,
+    parsedJWT: null
+  }
 }
 }

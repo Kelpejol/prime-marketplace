@@ -3,10 +3,8 @@ import Image from 'next/image';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Button from '../Button';
 import useDialog from '@/app/hooks/useDialog';
-import { useRouter } from 'next/navigation';
 import useOfferModal from '@/app/hooks/useOfferModal';
 import useBuyModal from '@/app/hooks/useBuyModal';
-import {ListingItem} from "@/app/dashboard/MyListings"
 
 
  interface CardProps{
@@ -18,12 +16,11 @@ import {ListingItem} from "@/app/dashboard/MyListings"
   symbol: string,
   status: number,
   showButton?: boolean,
-click?: (listing: ListingItem) => void; }
+click?: () => void; }
 
 const Card = ({src, name, tokenId, price, listingId, symbol, status, showButton, click}: CardProps) => {
   const [rotation, setRotation] = useState(132);
     const dialog = useDialog();
-    const router = useRouter();
     const offer = useOfferModal();
      const buyModal = useBuyModal();
 
@@ -77,25 +74,7 @@ const Card = ({src, name, tokenId, price, listingId, symbol, status, showButton,
     <div className="flex flex-col items-center">
       <div
         className="relative w-full aspect-[3/4] max-w-xs group"
-        onClick={() => {
-          if (click) {
-            // Create a ListingItem object with all required properties
-            const listing: ListingItem = {
-              alt: name,
-              id: tokenId,
-              src: src,
-              pricePerToken: price,
-              listingId: listingId,
-              name: name,
-              symbol: symbol,
-              status: status,
-            };
-            console.log(listing);
-            click(listing);
-          } else {
-            router.push(`/marketplace/listing/${listingId.toString()}`);
-          }
-        }}
+        onClick={click}
       >
         {/* Animated border gradient */}
         <div
@@ -117,16 +96,13 @@ const Card = ({src, name, tokenId, price, listingId, symbol, status, showButton,
         {/* Main card content */}
         <div className="relative h-full overflow-hidden rounded-sm md:rounded-md bg-[#191c29] cursor-pointer">
           <div className="relative w-full h-full">
-            {/* <div className={`${showButton && ("absolute inset-0 hover:bg-[rgba(0,0,0,0.78)] z-10 transition-colors duration-1000")}`} /> */}
             <div
               className={`${showButton && "absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-70 transition-all duration-300 z-10"}`}
             />
              {showButton && (
              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 z-20">
               <div className="flex-col space-y-3 md:p-6 p-3 md:space-y-6 rounded-xl bg-white/10 backdrop-filter backdrop-blur-lg border border-white/20 shadow-xl transform scale-95 group-hover:scale-100 transition-all duration-300">
-            {/* {showButton && (
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-[15]"> */}
-                {/* <div className="flex-col space-y-6"> */}
+          
                   <Button
                     actionLabel="Buy listing"
                     size="small"

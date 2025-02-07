@@ -15,6 +15,8 @@ import { fetchTokenInfo } from '@/app/hooks/useCurrencyInfo';
 import useListingsStore from "@/app/hooks/useListingsStore"
 import { ipfsToHttp } from '../utils/IpfsToHttp';
 import { nftContract } from '../contracts/getContract';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { showToast } from '../components/WalletToast';
 
 
 
@@ -24,6 +26,18 @@ export default function Listings() {
   const PAGE_SIZE = 8;
   const [initialLoading, setInitialLoading] = useState(true);
   const setMutate = useListingsStore(state => state.setMutate);
+      const router = useRouter();
+       const searchParams = useSearchParams();
+       const redirected = searchParams.get("redirected");
+
+
+       useEffect(() => {
+        if (redirected) {
+          showToast("Please log in", "Please connect your wallet to log in.");
+
+        }
+      }, [redirected]);
+
 
 
   const fetchListingsPage = useCallback(async (key: string) => {
@@ -63,6 +77,7 @@ export default function Listings() {
                 symbol={currency?.symbol || ''}
                 status={listing.status}
                 showButton
+                click={() => router.push(`/marketplace/listing/${listing.listingId.toString()}`)}
               />
             );
           } catch (error: any) {

@@ -1,4 +1,4 @@
-import { prepareContractCall, sendTransaction, toWei } from "thirdweb";
+import { prepareContractCall, sendAndConfirmTransaction, toWei } from "thirdweb";
 import { Account } from "thirdweb/wallets";
 import { contract } from "./getContract";
 import { NATIVE_TOKEN } from "@/app/constant";
@@ -8,16 +8,17 @@ import {getListing} from "./getPlatformInfo"
 export const makeOffer = async (listingId: bigint, account: Account, duration : bigint, totalPrice: bigint) => {
 
   const data = await getListing(listingId);
-    
+    console.log(data)
    let fee: bigint | undefined
-    if(data?.currency == NATIVE_TOKEN) {
-      fee= toWei(totalPrice.toString())
+   console.log(fee)
+    if(data?.currency.toLowerCase() == NATIVE_TOKEN.toLowerCase()) {
+      fee = totalPrice
+      console.log(fee)
     } 
     else {
       fee = undefined
     }
-  
-
+    console.log(fee)
      const transaction = prepareContractCall({
           contract,
           method: "makeOffer",
@@ -32,34 +33,49 @@ export const makeOffer = async (listingId: bigint, account: Account, duration : 
 
     try {
 
-             await sendTransaction({
-              account,
-              transaction,
-            });
-        
-            return {
-             success: true,
-             message: "Offer sent" 
-            }        
+            const  transactionReceipt  = await sendAndConfirmTransaction({
+      account,
+      transaction,
+    });
+    if(transactionReceipt.status === "success"){
+       return {
+     success: true,
+     message: "Offer sent successfully" 
+    }
+   
+    }
+
+     else{
+      return{
+        success: false,
+        message: "Offer failed to send"
+      }
+    }
+
           
           } catch (error: any) {
-            let message;
-            if(error.message && error.message.includes("__Offer_InvalidListing")) {
+           let message ;
+        if (error?.message) {
+        switch (true) {
+        case error.message.includes("__Offer_InvalidListing"):
               message = "You can't make an offer on this listing"
-            }
-            else if(error.message && error.message.includes("__Offer_InsufficientFunds")) {
+            break
+             case error.message.includes("__Offer_InsufficientFunds"):
              message = "Insufficient amount"
-            }
-            else {
-              message = "An unexpected error occured: Try again"
-            }
-        
-            return {
-              success: false,
-              message: message
-            }
+            break
+            default:
+              message = "An unexpected error occured: Try again"          
+            console.log(error)
             
           }
+           
+        }
+
+         throw new Error (
+      message,
+      error
+    )
+  }
 
 }
 
@@ -76,36 +92,48 @@ export const cancelOffer = async (offerId: bigint, listingId: bigint, account: A
 });
 try {
 
-        const { transactionHash } = await sendTransaction({
-        account,
-        transaction,
-        }); 
-        console.log(transactionHash)
-
-        return {
-        success: true,
-        message: "Offer sent"
-        }
-} catch (error: any) {
-   let message;
-  if (error?.message.includes('__Offer_InvalidListingId')) {
-   message = "Error: Invalid listing"  
-  }
+       const  transactionReceipt  = await sendAndConfirmTransaction({
+      account,
+      transaction,
+    });
+    if(transactionReceipt.status === "success"){
+       return {
+     success: true,
+     message: "Offer cancelled succesfully" 
+    }
    
-   if (error?.message.includes('__Offer_UnauthorizedToCall')){
+    }
+
+     else{
+      return{
+        success: false,
+        message: "Offer failed to cancel"
+      }
+    }
+
+} catch (error: any) {
+  console.log(error)
+   let message ;
+        if (error?.message) {
+        switch (true) {
+        case error.message.includes('__Offer_InvalidListingId'):
+       message = "Error: Invalid listing"  
+      break
+   
+    case error.message.includes('__Offer_UnauthorizedToCall'):
     message = "You are not authorized to cancel this offer"
-  }
-  else {
+     break
+    default: 
     message = "An unexpected error occured: Try again"
-  }
+  
+console.log(message)
+        }
+      }
 
-
-
-  return {
-    success: false,
-    message: message 
-  }
-
+   throw new Error (
+      message,
+      error
+    )
 }
 }
 
@@ -121,42 +149,53 @@ export const acceptOffer = async (offerId: bigint, listingId: bigint, account: A
 });
   try {
 
-        const { transactionHash } = await sendTransaction({
-        account,
-        transaction,
-        }); 
-        console.log(transactionHash)
-
-        return {
-        success: true,
-        message: "Offer accepted"
-        }
-} catch (error: any) {
-   let message;
-  if (error?.message.includes('__Offer_InvalidListingId')) {
-   message = "Error: Invalid listing"  
-  }
+       const  transactionReceipt  = await sendAndConfirmTransaction({
+      account,
+      transaction,
+    });
+    if(transactionReceipt.status === "success"){
+       return {
+     success: true,
+     message: "Offer successfully accepted" 
+    }
    
-   if (error?.message.includes('__Offer_UnauthorizedToCall')){
+    }
+
+     else{
+      return{
+        success: false,
+        message: "Offer failed to be accepted"
+      }
+    }
+
+} catch (error: any) {
+  let message;
+    if (error?.message) {
+        switch (true) {
+        case error.message.includes('__Offer_InvalidListingId'):
+       message = "Error: Invalid listing"  
+        break
+   
+    case error.message.includes('__Offer_UnauthorizedToCall'):
     message = "You are not authorized to accept this offer"
-  }
-   if (error?.message.includes('__Offer_MarketPlaceUnapproved')){
+      break
+    case error.message.includes('__Offer_MarketPlaceUnapproved'):
     message = "Error: Offer is not valid "
-  }
-   if (error?.message.includes('__Offer_InsufficientFunds')){
+      break
+    case error.message.includes('__Offer_InsufficientFunds'):
     message = "Error: Insufficient funds"
-  }
-  else {
+      break
+   default:
     message = "An unexpected error occured: Try again"
-  }
+  
 
+        }
+      }
 
-
-  return {
-    success: false,
-    message: message 
-  }
-
+   throw new Error (
+      message,
+      error
+    )
 }
 }
 export const rejectOffer = async (offerId: bigint, listingId: bigint, account: Account) => {
@@ -171,39 +210,51 @@ export const rejectOffer = async (offerId: bigint, listingId: bigint, account: A
 });
   try {
 
-        const { transactionHash } = await sendTransaction({
-        account,
-        transaction,
-        }); 
-        console.log(transactionHash)
-
-        return {
-        success: true,
-        message: "Offer accepted"
-        }
-} catch (error: any) {
-   let message;
-  if (error?.message.includes('__Offer_InvalidListingId')) {
-   message = "Error: Invalid listing"  
-  }
+       const  transactionReceipt  = await sendAndConfirmTransaction({
+      account,
+      transaction,
+    });
+    if(transactionReceipt.status === "success"){
+       return {
+     success: true,
+     message: "Offer successfully rejected" 
+    }
    
-   if (error?.message.includes('__Offer_UnauthorizedToCall')){
-    message = "You are not authorized to accept this offer"
-  }
+    }
+
+     else{
+      return{
+        success: false,
+        message: "Offer failed to be rejected"
+      }
+    }
+
+} catch (error: any) {
+  let message;
+    if (error?.message) {
+        switch (true) {
+        case error.message.includes('__Offer_InvalidListingId'):
+       message = "Error: Invalid listing"  
+       break
   
-   if (error?.message.includes('__Offer_InsufficientFunds')){
+   
+   case error.message.includes('__Offer_UnauthorizedToCall'):
+    message = "You are not authorized to accept this offer"
+      break
+  
+   case error.message.includes('__Offer_InsufficientFunds'):
     message = "Error: Insufficient funds"
-  }
-  else {
+      break
+  default: 
     message = "An unexpected error occured: Try again"
   }
+    }
 
 
-
-  return {
-    success: false,
-    message: message 
-  }
+  throw new Error (
+      message,
+      error
+    )
 
 }
 }

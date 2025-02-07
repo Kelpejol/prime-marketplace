@@ -80,7 +80,7 @@ contract OfferLogic is ERC2771ContextConsumer, IOffer, ReentrancyGuard{
        }
     }
 
-    function cancelOffer(uint256 _offerId, uint256 _listingId) external payable {
+    function cancelOffer(uint256 _offerId, uint256 _listingId) external {
       OfferStorage.Data storage data = _getOfferStorageData();
       DirectListingsStorage.Data storage _data = _getListingStorageData();
          address sender = _msgSender();
@@ -100,7 +100,7 @@ contract OfferLogic is ERC2771ContextConsumer, IOffer, ReentrancyGuard{
         
     }
 
-    function rejectOffer(uint256 _offerId, uint256 _listingId) external payable {
+    function rejectOffer(uint256 _offerId, uint256 _listingId) external {
       OfferStorage.Data storage data = _getOfferStorageData();
       DirectListingsStorage.Data storage _data = _getListingStorageData();
          address lister = _msgSender();
@@ -121,7 +121,7 @@ contract OfferLogic is ERC2771ContextConsumer, IOffer, ReentrancyGuard{
         
     }
 
-    function acceptOffer(uint256 _offerId, uint256 _listingId) external payable nonReentrant {
+    function acceptOffer(uint256 _offerId, uint256 _listingId) external nonReentrant {
          OfferStorage.Data storage data = _getOfferStorageData();
       DirectListingsStorage.Data storage _data = _getListingStorageData();
          address lister = _msgSender();

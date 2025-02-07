@@ -57,11 +57,6 @@ export default function MyListingsSidebar({ listing, onClose, isVisible }: MyLis
        }, [listing]);
 
 
-  // const handleClose = () => {
-  //   setTimeout(onClose, 300)
-  // }
-
-
   const handleOpenUpdateListingModal = () => {
     setOpenUpdateListingModal(true); 
   }
@@ -186,19 +181,6 @@ export default function MyListingsSidebar({ listing, onClose, isVisible }: MyLis
                     priority
                   />
                 </div>
-
-                {/* <Card
-                  key={listing.key}
-                  alt={listing.alt}
-                  id={listing.id}
-                  src={listing.src}
-                  price={listing.price}
-                  listingId={listing.listingId}
-                  name={listing.name}
-                  currency={listing.symbol}
-                  status={listing.status}
-                  variant="secondary"
-                /> */}
               </div>
             )}
 

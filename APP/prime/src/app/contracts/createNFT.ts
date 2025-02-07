@@ -105,7 +105,7 @@ export default async function createNFT(account: Account, params: FieldValues) {
     return {
       success: true,
       message: 'NFT created successfully',
-      contractAddress
+      contractAddress,
     };
   }  else{
     return {

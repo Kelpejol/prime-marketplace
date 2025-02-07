@@ -16,27 +16,91 @@ query ListingsQuery(
   }
 }`; 
 
-const myListingLengthQuery = `
-query ListingsLengthQuery($creator: String!) {
-newListingCreateds( where: { listingCreator: $creator }){
-listingId
-}
+const myAuctionsQuery = `
+query AuctionsQuery(
+  $creator: String!   
+  ) {
+  newAuctions(where: {
+   auctionCreator:
+    $creator
+  }){
+    auctionId
+    assetContract
+
+  }
 }`
 
-export const getListingLength = async (creatorAddress: string) => {
+const myOfferQuery = `
+query OffersQuery(
+  $sender: String!
+  ){
+  newOffers(
+  where: {sender: $sender}
+  ){
+    offerId
+    listingId
+    }
+  }`
+
+const myOfferNotifQuery = `
+  query OffersQuery($listingId_in: [String!]) {
+    newOffers(
+      where: { listingId_in: $listingId_in }
+    ) {
+      listingId
+      totalPrice
+      expirationTime
+      blockTimestamp
+      transactionHash
+      offerId
+    }
+  }
+`;
+
+export const getMyOfferNotif = async (listingId_in: string[]) => {
   try {
-    const variables = { creator: creatorAddress };
-    const data: any = await request(GRAPHQL_ENDPOINT, myListingLengthQuery, variables);
-    console.log(data.newListingCreateds?.length)
-    return data.newListingCreateds?.length || 0;
-    
+    const variables = {
+      listingId_in: listingId_in, 
+    };
+    const data: any = await request(GRAPHQL_ENDPOINT, myOfferNotifQuery, variables);
+    return data.newOffers || [];
   } catch (error) {
-   throw error
-   
+    console.error('Error fetching offers:', error);
+    return [];
   }
 };
 
-export const getLimitedListings = async (
+
+export const getMyAuctions = async (
+  creatorAddress: string,
+) => {
+  try {
+    const variables = {
+      creator: creatorAddress,
+    };
+
+    const data: any = await request(GRAPHQL_ENDPOINT, myAuctionsQuery, variables);
+    return data.newAuctions || [];
+  } catch (error) {
+    throw error
+  }
+}
+
+export const getMyOffers = async (
+  sender: string
+) => {
+  try {
+    const variables = {
+      sender: sender,
+    }
+    const data: any = await request(GRAPHQL_ENDPOINT, myOfferQuery, variables);
+    return data.newOffers || [];
+  } catch (error){
+    throw error
+  }
+}
+
+export const getMyListings = async (
   creatorAddress: string, 
   
 ) => {

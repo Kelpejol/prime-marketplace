@@ -11,6 +11,7 @@ import useOfferModal from "@/app/hooks/useOfferModal";
 import SwitchablePicker, { PickerType } from "../SwitchablePicker";
 import { makeOffer } from "@/app/contracts/offers"; 
 import { formattedTimeStamp } from "@/app/utils/timeHelper";
+import { toWei } from "thirdweb";
 
 
 
@@ -46,7 +47,7 @@ export default function OfferModal() {
 
   
 
-  const onSubmit = (data: FieldValues) => {
+  const onSubmit = async(data: FieldValues) => {
    const timeStamp = formattedTimeStamp(data.offerDuration.time, data.offerDuration.date);
    if(timeStamp < Math.floor(Date.now() / 1000)) {
      toast.error('Offer duration should be greater than current time');
@@ -54,8 +55,16 @@ export default function OfferModal() {
    }
   const duration = timeStamp - Math.floor(Date.now() / 1000);
     if(account) {
+      
       setIsDisabled(true);
-      makeOffer(offerModal.listingId!, account, BigInt(duration), data.offerAmount).then((data) => {
+      try{
+        console.log(
+          offerModal.listingId!,
+          account,
+          BigInt(duration),
+          data.offerAmount,
+        );
+      await makeOffer(offerModal.listingId!, account, BigInt(duration), toWei(data.offerAmount.toString())).then((data) => {
         
            if(data.success){
           toast.success(data.message!);
@@ -64,9 +73,16 @@ export default function OfferModal() {
            } else {
             toast.error(data.message!)
            }
-           setIsDisabled(false);
+          
         
       })
+    } catch(error: any){
+      toast.error(error.message);
+      console.error(error)
+    }
+    finally{
+      setIsDisabled(false)
+    }
     } else {
        offerModal.onClose();
       showToast();
@@ -122,7 +138,7 @@ export default function OfferModal() {
   return (
     <div>
       <Modal
-        title="Buy from listing"
+        title="Make an offer"
         isOpen={offerModal.isOpen}
         onClose={offerModal.onClose}  
         onSubmit={handleSubmit(onSubmit)}   

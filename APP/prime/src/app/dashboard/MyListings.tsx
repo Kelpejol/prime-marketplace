@@ -14,9 +14,10 @@ import SkeletonCardContainer from "../components/card/CardSkeleton";
 import { fetchTokenInfo } from '@/app/hooks/useCurrencyInfo';
 import { ipfsToHttp } from '../utils/IpfsToHttp';
 import { nftContract } from '../contracts/getContract';
-import { getLimitedListings, getListingLength} from '../graphClient';
+import { getMyListings} from '../graphClient';
 import MyListingsSidebar from './MyListingsSidebar';
 import useMyListingsStore from '../hooks/useMyListingsStore';
+import authAddress from '../utils/authAddress';
 
 
  export type ListingItem = {
@@ -33,6 +34,8 @@ import useMyListingsStore from '../hooks/useMyListingsStore';
   listingType?: number
 }
 
+
+
 export default function MyListings() {
   const createListing = useCreateListingModal();
   const PAGE_SIZE = 8;
@@ -44,9 +47,9 @@ export default function MyListings() {
  
 const fetchActiveListingsWithCount = async (page: number, size: number) => {
   try {
-    const limitedListing = await getLimitedListings(
-      "0xBF2492901e51fd2f8D25B91CdBba538624b228B4",
-    );
+
+    const address = await authAddress()
+    const limitedListing = await getMyListings(address!);
 
     const activeListings: any[] = [];
 
@@ -142,20 +145,21 @@ const onClose = useCallback(() => {
                 listingId={listing.listingId}
                 symbol={currency?.symbol || ""}
                 status={listing.status}
-                click={() =>
-                  handleCardClick({
-                    alt: nftDetails.metadata.name || "Unnamed NFT",
-                    id: listing.tokenId.toString(),
-                    src: imageUrl,
-                    pricePerToken: price,
-                    listingId: listing.listingId,
-                    name: nftDetails.metadata.name || "Unnamed NFT",
-                    symbol: currency?.symbol,
-                    status: listing.status,
-                    currency: listing.currency,
-                    listingType: listing.listingType,
-                  })
-                }
+                 click={() => {
+                const listingItem: ListingItem = {
+                  alt: nftDetails.metadata.name || "Unnamed NFT",
+                  id: listing.tokenId.toString(),
+                  src: imageUrl,
+                  pricePerToken: price,
+                  listingId: listing.listingId,
+                  name: nftDetails.metadata.name || "Unnamed NFT",
+                  symbol: currency?.symbol,
+                  status: listing.status,
+                  currency: listing.currency,
+                  listingType: listing.listingType,
+      };
+      handleCardClick(listingItem);
+    }}
               />
             );
           } catch (error) {
@@ -181,11 +185,7 @@ const onClose = useCallback(() => {
       };
     } catch (error) {
       console.error("Error fetching listings page:", error);
-      // Return empty data instead of throwing
-      // return {
-      //   items: [],
-      //   totalCount: 0,
-      // };
+      
       throw error
     }
   }, []);
@@ -197,7 +197,6 @@ const onClose = useCallback(() => {
       
     } catch (error) {
       console.error('Error fetching initial total count:', error);
-      // return null
       throw error
     }
   }, []);

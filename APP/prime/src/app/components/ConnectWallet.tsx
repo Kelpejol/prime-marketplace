@@ -40,7 +40,7 @@ export default function ConnectWallet({size, color, onClick}: ConnectWalletProps
       if(size == "secondary") {
        return "160px"}
        else if(size == "primary") {
-        return "130px"
+        return "148px"
        } else {
         return "100%"
        }
@@ -50,7 +50,7 @@ export default function ConnectWallet({size, color, onClick}: ConnectWalletProps
         return "144px"
       }
        else if (size == "primary") {
-        return "128px"
+        return "137px"
        } else {
         return "100%"
        }

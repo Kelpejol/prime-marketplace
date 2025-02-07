@@ -58,7 +58,7 @@ const {
   } = useForm<FieldValues>({
     defaultValues: {
       listingType: null,
-      assetContract: "",
+      assetContract: createListingModal.address || "",
       tokenId: null,
       tokenPrice: null,
       currency: "",
@@ -103,6 +103,7 @@ const {
         setSelectedValue(undefined);
         setStep(STEPS.TYPE);
         await listingsStore.refreshListings()
+        createListingModal.setAddress("")
  } else {
       toast.error(data.message);
     }
@@ -166,6 +167,8 @@ const [basicResult, advancedResult, proResult] = await Promise.all([
 
 
 
+
+
  
   const setCustomValues = useCallback((key: any, value: string | number | File | null | CurrencySelectValue | undefined | boolean) => {
   setValue(key, value, {
@@ -173,6 +176,14 @@ const [basicResult, advancedResult, proResult] = await Promise.all([
     shouldDirty: true,
   });
 }, [setValue]);
+
+
+
+useEffect(() => {
+  if (createListingModal.address) {
+    setCustomValues("assetContract", createListingModal.address);
+  }
+}, [createListingModal.address, setCustomValues]);
 
 
  
@@ -285,64 +296,77 @@ const [basicResult, advancedResult, proResult] = await Promise.all([
   if(step == STEPS.INFO) {
     bodyContent = (
       <div className="flex flex-col  gap-7">
-       <div className="flex flex-col gap-4">
-          <label htmlFor="assetContract" className="block text-xs md:text-sm font-medium text-gray-700">
-                      Asset address
-                    </label>
-          <input type="text"  id="assetContract" className={`${errors.assetContract ? "border-red-500" : "border-gray-300"} mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black placeholder:text-[13px]`} {...register("assetContract", {
-          required: true
-        })} placeholder="0x123...789" />
-          
-           
-         <div className="flex gap-4">
-                  <div className="flex-1">
-          <label htmlFor="tokenId" className="block text-xs md:text-sm font-medium text-gray-700">
-                      Token ID
-                    </label>
-          <input type="number" id="tokenId"  {...register("tokenId", {
-          required: true
-        })} className={`${errors.tokenId ? "border-red-500" : "border-gray-300"} mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black placeholder:text-[13px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`} placeholder="0" />
- 
+        <div className="flex flex-col gap-4">
+          <label
+            htmlFor="assetContract"
+            className="block text-xs md:text-sm font-medium text-gray-700"
+          >
+            Asset address
+          </label>
+          <input
+            type="text"
+            id="assetContract"
+            className={`${errors.assetContract ? "border-red-500" : "border-gray-300"} mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black placeholder:text-[13px]`}
+            {...register("assetContract", {
+              required: true,
+            })}
+            placeholder="0x123...789"
+          />
 
-       </div>
-          
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <label
+                htmlFor="tokenId"
+                className="block text-xs md:text-sm font-medium text-gray-700"
+              >
+                Token ID
+              </label>
+              <input
+                type="number"
+                id="tokenId"
+                {...register("tokenId", {
+                  required: true,
+                })}
+                className={`${errors.tokenId ? "border-red-500" : "border-gray-300"} mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black placeholder:text-[13px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
+                placeholder="0"
+              />
+            </div>
 
-        <div className="flex-1">
-          <label htmlFor="tokenPrice" className="block text-xs md:text-sm font-medium text-gray-700">
-                      Token price
-                    </label>
-          <input type="number" id="tokenPrice"  {...register("tokenPrice", {
-          required: true,
-        })} className={`${errors.tokenPrice ? "border-red-500" : "border-gray-300"} mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black placeholder:text-[13px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`} placeholder="0" />
- 
-      
-        
+            <div className="flex-1">
+              <label
+                htmlFor="tokenPrice"
+                className="block text-xs md:text-sm font-medium text-gray-700"
+              >
+                Token price
+              </label>
+              <input
+                type="number"
+                id="tokenPrice"
+                {...register("tokenPrice", {
+                  required: true,
+                })}
+                className={`${errors.tokenPrice ? "border-red-500" : "border-gray-300"} mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black placeholder:text-[13px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
+                placeholder="0"
+              />
+            </div>
           </div>
-          </div>
 
-       
-         <CurrencySelect
-          value={selectedValue}
-          onChange={(selectedValue) => handleSelectedValue(selectedValue)}
-         />
-        
-       
-        
-       
-        <div className="flex items-center justify-between">
-          <div className="text-black font-bold block md:text-xs text-[10px]">Reserve listing?</div>
-          <div className="flex flex-end">
-         <ToggleSwitch
-         checked={checked}
-         onChange={handleToggleChange}
-         
-         />
-         </div>
-         </div>
-       </div>
-       
-       </div>
-       )
+          <CurrencySelect
+            value={selectedValue}
+            onChange={(selectedValue) => handleSelectedValue(selectedValue)}
+          />
+
+          <div className="flex items-center justify-between">
+            <div className="text-black font-bold block md:text-xs text-[10px]">
+              Reserve listing?
+            </div>
+            <div className="flex flex-end">
+              <ToggleSwitch checked={checked} onChange={handleToggleChange} />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
 

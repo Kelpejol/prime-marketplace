@@ -1,5 +1,4 @@
 import {
-  sendTransaction, 
   sendAndConfirmTransaction,
   prepareContractCall,   
   readContract
@@ -197,8 +196,7 @@ export const buyFromListing = async (recipientAddress: string, listingId: bigint
       }
     }
   } catch (error: any) {
-    let message = 'Unexpected error occurred ';
-
+ let message ;
     if (error?.message) {
       switch (true) {
         case error.message.includes('__DirectListing_BuyerNotApproved'):
@@ -209,9 +207,9 @@ export const buyFromListing = async (recipientAddress: string, listingId: bigint
           break;
         case error.message.includes('__DirectListing_InsufficientFunds'):
           message = "Error purchasing listing: Make sure you are sending enough funds";
-          break;
-        default:
-          message = error.message || message;
+         break;
+       default:
+          message =  'Unexpected error occurred ';
       }
     }
 
